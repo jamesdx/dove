@@ -13,15 +13,11 @@
 
 
 
-
+# Step 1
 第一步、请严格按照 scaffold.md 文档内容，在当前目录 生成项目及代码，生成好的代码必须是可以运行的
 
-
-
-
-
-
-第一步，基于你上面已生成的内容（dove-parent 和 dove-api-gateway） 和 scaffold.md  要求生成的内容对比，找出没有生成的部分，然后告诉我 , 第二步，根据你没有生成的内容，继续 参照 scaffold.md文档 生成代码，第三步，参照 scaffold.md文档检查你生成代码，检查你生成代码，有遗漏必须马上改正， 第三步，一步一步运行程序，有问题理解解决，并将修正你生成的代码及 scaffold.md文件。”  这个命令里的
+# Step 2
+第一步，基于你上面已生成的内容（dove-parent 和 dove-api-gateway） 和 scaffold.md  要求生成的内容对比，找出没有生成的部分，然后告诉我 , 第二步，根据你没有生成的内容，继续 参照 scaffold.md文档 生成代码，
 
 第一步，基于你上面已生成的内容（dove-parent 和 dove-api-gateway） 的内容， 你还有下面内容没有生成，请根据scaffold.md 内容，在 dove-api-gateway 项目里生成你未生成的代码。 "6. Kubernetes 配置：
 service.yml
@@ -32,10 +28,13 @@ startup.sh
 health-check.sh
 cleanup.sh"
 
+# Step 3
+
+第一步，一步一步运行程序，有问题理解解决，并将修正你生成的代码及 scaffold.md文件。”  这个命令里的
 
 
 
-第一步、请严格按照 scaffold.md 文档内容，生成项目及代码，生成好的代码必须是可以运行的， 第二步，参照 scaffold.md文档检查你生成代码，有遗漏必须马上改正， 第三步，一步一步运行程序，有问题理解解决，并将修正你生成的代码及 scaffold.md文件。
+
 
 下一步，我们需要：
 1. 修复所有的linter错误，这些错误主要是由于包路径不匹配和依赖问题导致的。
