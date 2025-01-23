@@ -1,19 +1,14 @@
 package com.helix.dove.config.predicates;
 
-import lombok.Data;
 import org.springframework.cloud.gateway.handler.predicate.AbstractRoutePredicateFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
 @Component
 public class LoadBalancePredicateFactory extends AbstractRoutePredicateFactory<LoadBalancePredicateFactory.Config> {
-
-    private final AtomicInteger currentLoad = new AtomicInteger(0);
 
     public LoadBalancePredicateFactory() {
         super(Config.class);
@@ -22,29 +17,29 @@ public class LoadBalancePredicateFactory extends AbstractRoutePredicateFactory<L
     @Override
     public Predicate<ServerWebExchange> apply(Config config) {
         return exchange -> {
-            int load = currentLoad.get();
-            
-            // 检查当前负载是否在阈值内
-            if (load < config.getMaxLoad()) {
-                currentLoad.incrementAndGet();
-                exchange.getResponse().beforeCommit(() -> {
-                    currentLoad.decrementAndGet();
-                    return true;
-                });
-                return true;
-            }
-            
-            return false;
+            // 在这里实现负载均衡逻辑
+            return true;
         };
     }
 
-    @Override
-    public List<String> shortcutFieldOrder() {
-        return Arrays.asList("maxLoad");
-    }
-
-    @Data
     public static class Config {
-        private int maxLoad = 1000;
+        private String group;
+        private int weight;
+
+        public String getGroup() {
+            return group;
+        }
+
+        public void setGroup(String group) {
+            this.group = group;
+        }
+
+        public int getWeight() {
+            return weight;
+        }
+
+        public void setWeight(int weight) {
+            this.weight = weight;
+        }
     }
 }

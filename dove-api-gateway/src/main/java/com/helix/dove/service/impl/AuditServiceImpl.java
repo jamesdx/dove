@@ -1,5 +1,6 @@
 package com.helix.dove.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.helix.dove.entity.AuditEntity;
 import com.helix.dove.repository.AuditRepository;
 import com.helix.dove.service.AuditService;
@@ -16,6 +17,7 @@ import java.util.Map;
 public class AuditServiceImpl implements AuditService {
 
     private final AuditRepository auditRepository;
+    private final ObjectMapper objectMapper;
 
     @Override
     public Mono<AuditEntity> createAudit(String operation, String entityType, Long entityId,
@@ -52,9 +54,9 @@ public class AuditServiceImpl implements AuditService {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> convertToMap(Object value) {
-        if (value instanceof Map) {
-            return (Map<String, Object>) value;
+        if (value == null) {
+            return null;
         }
-        return null;
+        return objectMapper.convertValue(value, Map.class);
     }
 }

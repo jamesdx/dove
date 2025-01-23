@@ -1,26 +1,32 @@
 package com.helix.dove.utils;
 
 import com.helix.dove.dto.RouteDTO;
+import org.springframework.cloud.gateway.filter.FilterDefinition;
+import org.springframework.cloud.gateway.filter.GatewayFilter;
+import org.springframework.cloud.gateway.filter.factory.GatewayFilterFactory;
+import org.springframework.cloud.gateway.handler.predicate.PredicateDefinition;
 import org.springframework.cloud.gateway.route.Route;
-import org.springframework.cloud.gateway.route.RouteDefinition;
+import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.cloud.gateway.support.NotFoundException;
+import org.springframework.context.ApplicationContext;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class RouteUtil {
     
-    public static RouteDefinition convertToDefinition(RouteDTO dto) {
-        RouteDefinition definition = new RouteDefinition();
-        definition.setId(dto.getId());
-        definition.setUri(URI.create(dto.getUri()));
-        definition.setPredicates(dto.getPredicates());
-        definition.setFilters(dto.getFilters());
-        definition.setMetadata(dto.getMetadata());
-        definition.setOrder(dto.getOrder());
-        return definition;
+    public static Route convertToRoute(RouteDTO routeDTO) {
+        return Route.async()
+                .id(routeDTO.getId())
+                .uri(routeDTO.getUri())
+                .predicate(exchange -> true)
+                .order(routeDTO.getOrder())
+                .build();
     }
 
     public static RouteDTO convertToDTO(Route route) {
@@ -33,9 +39,12 @@ public class RouteUtil {
         return dto;
     }
 
-    public static Route.AsyncBuilder buildRoute(RouteLocatorBuilder.Builder builder, RouteDTO dto) {
+    public static Route buildRoute(RouteLocatorBuilder.Builder builder, RouteDTO dto) {
         return builder.route(dto.getId(), r -> r.path("/**")
-                .uri(dto.getUri()));
+                .uri(dto.getUri()))
+                .build()
+                .getRoutes()
+                .blockFirst();
     }
 
     public static <T> Mono<T> throwNotFoundException(String message) {
@@ -55,7 +64,7 @@ public class RouteUtil {
         }
     }
 
-    public static Map<String, Object> mergeMetadata(Map<String, Object> existing, Map<String, Object> update) {
+    public static Map<String, String> mergeMetadata(Map<String, String> existing, Map<String, String> update) {
         if (existing == null) {
             return update;
         }
@@ -63,5 +72,46 @@ public class RouteUtil {
             existing.putAll(update);
         }
         return existing;
+    }
+
+    private static List<PredicateDefinition> convertToPredicateDefinitions(List<RouteDTO.PredicateDTO> predicates) {
+        return predicates.stream()
+                .map(p -> {
+                    PredicateDefinition pd = new PredicateDefinition();
+                    pd.setName(p.getName());
+                    pd.setArgs(p.getArgs().entrySet().stream()
+                            .collect(Collectors.toMap(
+                                Map.Entry::getKey,
+                                e -> String.valueOf(e.getValue())
+                            )));
+                    return pd;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private static List<FilterDefinition> convertToFilterDefinitions(List<RouteDTO.FilterDTO> filters) {
+        return filters.stream()
+                .map(f -> {
+                    FilterDefinition fd = new FilterDefinition();
+                    fd.setName(f.getName());
+                    fd.setArgs(f.getArgs().entrySet().stream()
+                            .collect(Collectors.toMap(
+                                Map.Entry::getKey,
+                                e -> String.valueOf(e.getValue())
+                            )));
+                    return fd;
+                })
+                .collect(Collectors.toList());
+    }
+
+    public static RouteLocator buildRouteLocator(RouteLocatorBuilder builder, List<RouteDTO> routes) {
+        RouteLocatorBuilder.Builder routeBuilder = builder.routes();
+        routes.forEach(route -> 
+            routeBuilder.route(route.getId(), 
+                r -> r.predicate(exchange -> true)
+                    .uri(route.getUri())
+            )
+        );
+        return routeBuilder.build();
     }
 }

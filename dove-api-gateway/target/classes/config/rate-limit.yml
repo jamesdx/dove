@@ -1,0 +1,52 @@
+rate-limit:
+  enabled: true
+  repository: redis
+  default-policy:
+    limit: 100
+    quota: 1000
+    refresh-interval: 60
+    response-headers: true
+
+  policies:
+    user-service:
+      limit: 50
+      quota: 500
+      refresh-interval: 60
+      response-headers: true
+      
+    order-service:
+      limit: 30
+      quota: 300
+      refresh-interval: 60
+      response-headers: true
+      
+    product-service:
+      limit: 40
+      quota: 400
+      refresh-interval: 60
+      response-headers: true
+
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: 0
+    timeout: 2000
+    pool:
+      max-active: 8
+      max-idle: 8
+      min-idle: 0
+      max-wait: -1
+
+  response:
+    status: 429
+    headers:
+      - X-RateLimit-Limit
+      - X-RateLimit-Remaining
+      - X-RateLimit-Reset
+    body: "Too many requests"
+
+  metrics:
+    enabled: true
+    tags:
+      application: dove-api-gateway

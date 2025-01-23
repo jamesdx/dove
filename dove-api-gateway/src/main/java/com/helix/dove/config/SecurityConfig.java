@@ -17,13 +17,16 @@ public class SecurityConfig {
 
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
-        return http
-                .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .authorizeExchange(auth -> auth
-                        .pathMatchers("/actuator/**").permitAll()
-                        .anyExchange().authenticated())
-                .build();
+        http
+            .csrf().disable()
+            .cors().configurationSource(corsConfigurationSource()).and()
+            .authorizeExchange()
+                .pathMatchers("/actuator/**").permitAll()
+                .pathMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                .anyExchange().authenticated()
+            .and()
+                .httpBasic();
+        return http.build();
     }
 
     @Bean

@@ -8,8 +8,7 @@ import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import javax.annotation.PostConstruct;
-import java.time.Duration;
+import jakarta.annotation.PostConstruct;
 
 @Service
 @RequiredArgsConstructor
@@ -21,35 +20,37 @@ public class CacheServiceImpl implements CacheService {
     @PostConstruct
     public void init() {
         localCache = Caffeine.newBuilder()
-                .maximumSize(10_000)
-                .expireAfterWrite(Duration.ofMinutes(5))
+                .maximumSize(10000)
                 .build();
     }
 
     @Override
     public <T> Mono<T> get(String key, Class<T> type) {
-        Object localValue = localCache.getIfPresent(key);
-        if (localValue != null && type.isInstance(localValue)) {
-            return Mono.just(type.cast(localValue));
+        T value = type.cast(localCache.getIfPresent(key));
+        if (value != null) {
+            return Mono.just(value);
         }
-
-        return redisTemplate.opsForValue().get(key)
-                .filter(type::isInstance)
-                .map(type::cast)
-                .doOnNext(value -> localCache.put(key, value));
+        return redisTemplate.opsForValue()
+                .get(key)
+                .map(obj -> {
+                    T result = type.cast(obj);
+                    localCache.put(key, result);
+                    return result;
+                });
     }
 
     @Override
     public <T> Mono<Void> put(String key, T value) {
         localCache.put(key, value);
-        return redisTemplate.opsForValue().set(key, value, Duration.ofHours(1))
+        return redisTemplate.opsForValue()
+                .set(key, value)
                 .then();
     }
 
     @Override
-    public <T> Mono<T> getOrCreate(String key, Class<T> type, Mono<T> creator) {
+    public <T> Mono<T> getOrFetch(String key, Class<T> type, Mono<T> supplier) {
         return get(key, type)
-                .switchIfEmpty(creator.flatMap(value -> 
+                .switchIfEmpty(supplier.flatMap(value -> 
                     put(key, value).thenReturn(value)
                 ));
     }
@@ -63,11 +64,21 @@ public class CacheServiceImpl implements CacheService {
     @Override
     public Mono<Void> clear() {
         localCache.invalidateAll();
-        return redisTemplate.delete(redisTemplate.keys("*")).then();
+        return redisTemplate.execute(connection -> connection.serverCommands().flushDb()).then();
     }
 
     @Override
     public Mono<Long> size() {
         return redisTemplate.keys("*").count();
+    }
+
+    @Override
+    public void clearCache(String key) {
+        // Implementation
+    }
+
+    @Override
+    public void refreshCache(String key) {
+        // Implementation
     }
 }

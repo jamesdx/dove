@@ -12,16 +12,16 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/actuator")
 public class HealthController implements HealthIndicator {
 
-    @GetMapping("/health")
-    public Mono<ResponseDTO<Health>> health() {
-        return Mono.just(ResponseDTO.success(health()));
-    }
-
     @Override
     public Health health() {
         return Health.up()
                 .withDetail("app", "dove-api-gateway")
                 .withDetail("description", "Spring Cloud Gateway")
                 .build();
+    }
+
+    @GetMapping("/health/check")
+    public Mono<ResponseDTO<Health>> check() {
+        return Mono.just(ResponseDTO.success(health()));
     }
 }
