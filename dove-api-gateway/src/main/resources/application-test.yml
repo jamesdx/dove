@@ -1,0 +1,41 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: test_route
+          uri: http://test-service:8081
+          predicates:
+            - Path=/test/**
+          filters:
+            - StripPrefix=1
+    nacos:
+      discovery:
+        server-addr: nacos-server:8848
+        namespace: test
+      config:
+        server-addr: nacos-server:8848
+        namespace: test
+  data:
+    redis:
+      host: redis-server
+      port: 6379
+
+logging:
+  level:
+    root: INFO
+    com.helix.dove: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized

@@ -1,0 +1,54 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: prod_route
+          uri: lb://prod-service
+          predicates:
+            - Path=/api/**
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: defaultCircuitBreaker
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER:nacos-server:8848}
+        namespace: prod
+      config:
+        server-addr: ${NACOS_SERVER:nacos-server:8848}
+        namespace: prod
+  data:
+    redis:
+      host: ${REDIS_HOST:redis-server}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      ssl: true
+
+logging:
+  level:
+    root: WARN
+    com.helix.dove: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+  metrics:
+    export:
+      prometheus:
+        enabled: true 

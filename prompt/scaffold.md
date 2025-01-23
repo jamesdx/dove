@@ -10,9 +10,7 @@ Create a high-performance, scalable SaaS platform designed to support:
 
 ## Project Structure Requirements
 
-Create a Maven-based parent-child project structure with the following specifications:
-
-### Parent Project (dove-parent)
+### 父项目 (dove-parent)
 - Create a standalone Maven project for managing shared dependencies
 - Location: Independent root directory
 - Purpose: Manage shared dependencies, plugins, and version configurations
@@ -40,7 +38,7 @@ Create a Maven-based parent-child project structure with the following specifica
 - Location: Independent subdirectory
 - Must be fully runnable out of the box with a single command
 
-### Required Files and Directories Structure
+### 目录结构
 ```
 dove/
 ├── dove-parent/

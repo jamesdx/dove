@@ -1,0 +1,54 @@
+routes:
+  - id: user_service
+    uri: lb://user-service
+    predicates:
+      - Path=/api/users/**
+      - Method=GET,POST,PUT,DELETE
+    filters:
+      - StripPrefix=2
+      - name: CircuitBreaker
+        args:
+          name: userServiceCircuitBreaker
+      - name: RequestRateLimiter
+        args:
+          redis-rate-limiter.replenishRate: 10
+          redis-rate-limiter.burstCapacity: 20
+    metadata:
+      version: v1
+      team: user-team
+
+  - id: order_service
+    uri: lb://order-service
+    predicates:
+      - Path=/api/orders/**
+      - Method=GET,POST,PUT,DELETE
+    filters:
+      - StripPrefix=2
+      - name: CircuitBreaker
+        args:
+          name: orderServiceCircuitBreaker
+      - name: RequestRateLimiter
+        args:
+          redis-rate-limiter.replenishRate: 20
+          redis-rate-limiter.burstCapacity: 40
+    metadata:
+      version: v1
+      team: order-team
+
+  - id: product_service
+    uri: lb://product-service
+    predicates:
+      - Path=/api/products/**
+      - Method=GET,POST,PUT,DELETE
+    filters:
+      - StripPrefix=2
+      - name: CircuitBreaker
+        args:
+          name: productServiceCircuitBreaker
+      - name: RequestRateLimiter
+        args:
+          redis-rate-limiter.replenishRate: 30
+          redis-rate-limiter.burstCapacity: 60
+    metadata:
+      version: v1
+      team: product-team
