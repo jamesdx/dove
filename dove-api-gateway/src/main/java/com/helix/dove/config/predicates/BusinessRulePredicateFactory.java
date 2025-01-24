@@ -1,6 +1,8 @@
 package com.helix.dove.config.predicates;
 
+import com.helix.dove.service.BusinessRuleEngine;
 import lombok.Data;
+import lombok.Setter;
 import org.springframework.cloud.gateway.handler.predicate.AbstractRoutePredicateFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
@@ -10,42 +12,67 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
+/**
+ * Route predicate factory that filters requests based on business rules.
+ */
 @Component
 public class BusinessRulePredicateFactory extends AbstractRoutePredicateFactory<BusinessRulePredicateFactory.Config> {
+
+    @Setter
+    private BusinessRuleEngine ruleEngine;
 
     public BusinessRulePredicateFactory() {
         super(Config.class);
     }
 
     @Override
-    public Predicate<ServerWebExchange> apply(Config config) {
-        return exchange -> {
-            // 获取请求头中的业务参数
-            Map<String, String> headers = exchange.getRequest().getHeaders()
-                    .toSingleValueMap();
-            
-            // 检查业务规则
-            return matchBusinessRules(headers, config);
-        };
-    }
-
-    private boolean matchBusinessRules(Map<String, String> headers, Config config) {
-        // 实现业务规则匹配逻辑
-        String userType = headers.getOrDefault("X-User-Type", "");
-        String businessLine = headers.getOrDefault("X-Business-Line", "");
-
-        return config.getUserTypes().contains(userType) &&
-               config.getBusinessLines().contains(businessLine);
+    public List<String> shortcutFieldOrder() {
+        return Arrays.asList("ruleType", "ruleParams", "combinationOperator");
     }
 
     @Override
-    public List<String> shortcutFieldOrder() {
-        return Arrays.asList("userTypes", "businessLines");
+    public Predicate<ServerWebExchange> apply(Config config) {
+        return exchange -> {
+            if (ruleEngine == null) {
+                return false;
+            }
+
+            switch (config.getRuleType()) {
+                case "PERCENTAGE_SPLIT":
+                    return ruleEngine.evaluatePercentageSplit(exchange, config.getRuleParams());
+                case "USER_GROUP":
+                    return ruleEngine.evaluateUserGroup(exchange, config.getRuleParams());
+                case "FEATURE_FLAG":
+                    return ruleEngine.evaluateFeatureFlag(exchange, config.getRuleParams());
+                case "CUSTOM_RULE":
+                    return ruleEngine.evaluateCustomRule(exchange, config.getRuleParams());
+                case "COMBINED":
+                    return ruleEngine.evaluateCombinedRules(exchange, config.getRuleParams(), 
+                        config.getCombinationOperator());
+                default:
+                    return ruleEngine.evaluateRule(exchange, config.getRuleParams());
+            }
+        };
     }
 
+    /**
+     * Configuration class for BusinessRulePredicateFactory.
+     */
     @Data
     public static class Config {
-        private List<String> userTypes = Arrays.asList("*");
-        private List<String> businessLines = Arrays.asList("*");
+        /**
+         * The type of business rule to apply.
+         */
+        private String ruleType;
+
+        /**
+         * Parameters for the business rule.
+         */
+        private Map<String, Object> ruleParams;
+
+        /**
+         * Operator for combining multiple rules (AND/OR).
+         */
+        private String combinationOperator;
     }
 }

@@ -7,6 +7,10 @@
             * 支持权重路由
             * 支持自定义路由谓词工厂” ，第二步，帮助我修改  scaffold.md 文件，让 cursor 或者其他 AI 按照需求生成代码；
 
+根据你上面修改内容，把 “equired Files and Directories Structure 的 dove-api-gateway 结构也相应的更新 ”
+
+帮助我修改  scaffold.md 文件，加入你对生成代码的 单元测试 代码的命令，让 cursor 或者其他 AI 按照需求生成代码 ，单元测试代码 要求覆盖你所有的代码的场景，不能有遗漏
+
 
 请认真分析“00. Enterprise API Gateway Solution - Spring Cloud API Gateway.md” 的 “三、核心设计下功能设计的路由转发模块”内容 ， 同时，再次检查下 scaffold.md 关于生成代码的描述，要求cursor 或者其他 AI 工具 按照 scaffold.md  文档描述内容生成的项目和代码、测试用例代码 必须开箱即用。 如果 需要修改 scaffold.md 文档请帮我修改。 
 
@@ -29,8 +33,12 @@ health-check.sh
 cleanup.sh"
 
 # Step 3
-
+第一步，一步一步运行程序，有问题理解解决，知道 dove-api-gateway 启动成功，第二步，程序启动后，教我如何验证程序跑通了
 第一步，一步一步运行程序，有问题理解解决，并将修正你生成的代码及 scaffold.md文件。”  这个命令里的
+·
+
+# Step 4 
+请认真阅读 scaffold.md 文档， 分析 dove-parent 和 dove-api-gateway 两个项目，然后根据 “Test Requirement，Test Coverage Requirement，Test Best Practices, Test Dependencies” 生成测试相关的代码。
 
 
 
