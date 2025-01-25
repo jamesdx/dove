@@ -1,6 +1,52 @@
 # Login System Product Requirements Document (PRD)
 # 登录系统产品需求文档
 
+## 0. Technical Requirements | 技术要求
+
+### 0.1 Technology Selection Principles | 技术选型原则
+- 开源技术，确保可商用
+- 文档完善，社区活跃
+- 技术支持完善
+- 企业级生产环境验证
+- 支持多终端部署
+
+### 0.2 Project Architecture | 项目架构
+- 前后端分离架构
+- 多终端支持（Web、Mobile、Desktop）
+- 企业级微服务架构
+
+### 0.3 Project Structure | 项目结构
+#### Backend Structure | 后端结构
+- 标准 Maven 父子项目结构
+- 父项目: `dove-parent`
+  - 统一依赖管理
+  - 统一版本控制
+  - 统一构建配置
+- 子项目: 独立的 Maven 微服务项目
+  - 独立目录结构
+  - 独立部署配置
+  - 独立 Git 仓库
+  - 继承父项目配置
+
+#### Naming Conventions | 命名规范
+- 项目命名规范
+  - 所有子项目以 `dove-` 为前缀
+  - 示例: `dove-auth`, `dove-gateway`, `dove-user`
+- Java包命名规范
+  - 统一以 `com.helix.dove` 为根包名
+  - 示例: `com.helix.dove.auth`, `com.helix.dove.user`
+
+#### Database | 数据库
+- MariaDB 11.5.2
+  - 开源、高性能
+  - 兼容 MySQL
+  - 企业级特性支持
+- 持久层框架
+  - Spring Data JPA
+  - JPA规范实现
+  - 自动化SQL生成
+  - 丰富的查询支持
+
 ## 1. Technical Architecture Overview | 技术架构概述
 
 ### 1.1 Architecture Stack | 技术栈
@@ -9,20 +55,40 @@
   - TypeScript support
   - Vue Router for SPA routing
   - Pinia for state management
-- **UI Framework**: Ant Design Vue
-- **Build Tool**: Vite
-- **HTTP Client**: Axios
-- **Testing**: Jest + Vue Test Utils
+  - Vue I18n for internationalization
+- **UI Framework**: 
+  - Ant Design Vue
+  - RTL support components
+  - Locale-specific components
+- **Build Tool**: 
+  - Vite
+  - i18n resource bundling
+  - Dynamic locale loading
+- **HTTP Client**: 
+  - Axios
+  - i18n request/response interceptors
+- **Testing**: 
+  - Jest + Vue Test Utils
+  - i18n testing utilities
 
 #### Backend | 后端
+- **Internationalization Support**:
+  - Spring MessageSource
+  - Resource Bundle
+  - Dynamic message loading
+  - Custom locale resolvers
+
 - **Microservices Framework**:
   - Spring Cloud Alibaba 2022.0.0.0
   - Spring Boot 3.2.x
   - Spring Cloud Gateway
   - Spring Security + JWT
+  - i18n message sources
 
 - **Service Discovery & Config**:
   - Nacos 2.x (服务注册、配置中心)
+    * Multi-region configuration
+    * Locale-specific settings
   - OpenFeign (服务调用)
 
 - **Resilience & Monitoring**:
@@ -32,9 +98,9 @@
   - Prometheus + Grafana (监控告警)
 
 - **Database & Cache**:
-  - MySQL 8.0
+  - MariaDB 11.5.2
   - Redis 7.x
-  - MyBatis-Plus (ORM)
+  - Spring Data JPA (持久层框架)
 
 - **Message Queue**:
   - RocketMQ 5.x (消息队列)
@@ -118,10 +184,18 @@ CREATE TABLE `user` (
   `last_login_time` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `locale` varchar(10) NOT NULL DEFAULT 'en_US',
+  `timezone` varchar(40) NOT NULL DEFAULT 'UTC',
+  `date_format` varchar(20) NOT NULL DEFAULT 'yyyy-MM-dd',
+  `time_format` varchar(20) NOT NULL DEFAULT 'HH:mm:ss',
+  `currency` varchar(3) NOT NULL DEFAULT 'USD',
+  `region` varchar(10) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_username` (`username`),
-  UNIQUE KEY `idx_email` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  UNIQUE KEY `idx_email` (`email`),
+  KEY `idx_locale` (`locale`),
+  KEY `idx_region` (`region`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
 #### 2.3.2 User Token Table | 用户Token表
@@ -137,6 +211,39 @@ CREATE TABLE `user_token` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
+#### 2.3.3 Localization Tables | 本地化表
+```sql
+-- 语言资源表
+CREATE TABLE `i18n_resource` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `locale` varchar(10) NOT NULL,
+  `resource_key` varchar(100) NOT NULL,
+  `resource_value` text NOT NULL,
+  `resource_type` varchar(20) NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_locale_key` (`locale`, `resource_key`),
+  KEY `idx_resource_type` (`resource_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 区域配置表
+CREATE TABLE `region_config` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `region_code` varchar(10) NOT NULL,
+  `default_locale` varchar(10) NOT NULL,
+  `supported_locales` json NOT NULL,
+  `timezone` varchar(40) NOT NULL,
+  `date_format` varchar(20) NOT NULL,
+  `time_format` varchar(20) NOT NULL,
+  `currency` varchar(3) NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_region_code` (`region_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
 ### 2.4 API Specifications | API规范
 
 #### 2.4.1 Authentication APIs | 认证API
@@ -148,20 +255,43 @@ CREATE TABLE `user_token` (
       username: string
       password: string
       remember_me: boolean
+      locale: string    # 用户语言偏好
+      timezone: string  # 用户时区
     response:
       access_token: string
       refresh_token: string
       expires_in: number
+      user_settings:
+        locale: string
+        timezone: string
+        date_format: string
+        time_format: string
+        currency: string
 
-/api/v1/auth/refresh:
-  post:
-    summary: 刷新Token
-    request:
-      refresh_token: string
+/api/v1/auth/settings:
+  get:
+    summary: 获取用户区域设置
     response:
-      access_token: string
-      refresh_token: string
-      expires_in: number
+      locale: string
+      timezone: string
+      date_format: string
+      time_format: string
+      currency: string
+      supported_locales: array
+      supported_timezones: array
+      supported_currencies: array
+
+  put:
+    summary: 更新用户区域设置
+    request:
+      locale: string
+      timezone: string
+      date_format: string
+      time_format: string
+      currency: string
+    response:
+      success: boolean
+      message: string
 ```
 
 ### 2.5 Performance Requirements | 性能需求
@@ -228,3 +358,127 @@ CREATE TABLE `user_token` (
 2. API响应时间 < 200ms
 3. 用户认证成功率 > 99.99%
 4. 安全漏洞 Zero 
+
+### 2.7 Internationalization Implementation | 国际化实现
+
+#### 2.7.1 Frontend Internationalization | 前端国际化
+```typescript
+// i18n配置
+export default {
+  locale: 'zh_CN',
+  fallbackLocale: 'en_US',
+  messages: {
+    async loader(locale) {
+      const messages = await loadLocaleMessages(locale);
+      return messages;
+    }
+  },
+  numberFormats: {
+    'en_US': {
+      currency: {
+        style: 'currency',
+        currency: 'USD'
+      }
+    },
+    'zh_CN': {
+      currency: {
+        style: 'currency',
+        currency: 'CNY'
+      }
+    }
+  },
+  dateTimeFormats: {
+    'en_US': {
+      short: {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      }
+    },
+    'zh_CN': {
+      short: {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }
+    }
+  }
+}
+```
+
+#### 2.7.2 Backend Internationalization | 后端国际化
+```java
+@Configuration
+public class I18nConfig {
+    @Bean
+    public LocaleResolver localeResolver() {
+        SessionLocaleResolver resolver = new SessionLocaleResolver();
+        resolver.setDefaultLocale(Locale.US);
+        return resolver;
+    }
+    
+    @Bean
+    public MessageSource messageSource() {
+        ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
+        messageSource.setBasename("classpath:i18n/messages");
+        messageSource.setDefaultEncoding("UTF-8");
+        messageSource.setCacheSeconds(3600);
+        return messageSource;
+    }
+}
+```
+
+#### 2.7.3 Database Internationalization | 数据库国际化
+- 字符集使用：utf8mb4
+- 排序规则：utf8mb4_unicode_ci
+- 时间存储：使用UTC时间
+- 数值格式：统一存储格式
+
+### 2.8 Regional Deployment | 区域部署
+
+#### 2.8.1 Multi-Region Architecture | 多区域架构
+```yaml
+regions:
+  asia-east:
+    primary: Tokyo
+    secondary: Seoul
+    databases:
+      master: Tokyo
+      slaves: [Seoul, Singapore]
+    cdn_nodes: [Tokyo, Seoul, Singapore, Hong Kong]
+
+  europe-west:
+    primary: Frankfurt
+    secondary: Paris
+    databases:
+      master: Frankfurt
+      slaves: [Paris, London]
+    cdn_nodes: [Frankfurt, Paris, London, Amsterdam]
+
+  america-east:
+    primary: Virginia
+    secondary: Ohio
+    databases:
+      master: Virginia
+      slaves: [Ohio, Toronto]
+    cdn_nodes: [Virginia, Ohio, Toronto, New York]
+```
+
+#### 2.8.2 Data Synchronization | 数据同步
+```yaml
+sync_strategy:
+  user_data:
+    type: real-time
+    priority: high
+    conflict_resolution: last-write-wins
+
+  i18n_resources:
+    type: scheduled
+    frequency: hourly
+    priority: medium
+
+  audit_logs:
+    type: batch
+    frequency: daily
+    priority: low
+``` 
