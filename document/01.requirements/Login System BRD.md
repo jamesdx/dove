@@ -411,4 +411,65 @@ To implement a secure, scalable, and user-friendly authentication system support
   * Tenant-specific SLAs
   * Performance guarantees
   * Availability guarantees
-  * Support guarantees 
+  * Support guarantees
+
+## 12. Project Structure Requirements | 项目结构要求
+
+### 12.1 Repository Management | 仓库管理
+- 每个服务必须是独立的Git仓库
+- 每个仓库必须有完整的文档
+- 每个仓库必须有自己的版本控制策略
+- 每个仓库必须有自己的分支管理策略
+
+### 12.2 Service Independence | 服务独立性
+- 每个服务必须能够独立部署
+- 每个服务必须有自己的配置管理
+- 每个服务必须有自己的日志管理
+- 每个服务必须有自己的监控指标
+
+### 12.3 Build & Deployment | 构建和部署
+- 每个服务必须支持容器化部署
+- 每个服务必须有自己的CI/CD流程
+- 每个服务必须有完整的部署文档
+- 每个服务必须支持蓝绿部署和灰度发布
+
+### 12.4 Service Dependencies | 服务依赖
+- 服务间依赖必须通过接口契约管理
+- 服务间通信必须支持版本控制
+- 服务间必须支持熔断和降级
+- 公共依赖必须通过公共模块管理
+
+### 12.5 Local Development | 本地开发
+- 必须支持本地开发环境快速启动
+- 必须支持本地服务独立调试
+- 必须支持本地服务间联调
+- 必须支持本地环境数据隔离
+
+### 12.6 Project Structure | 项目结构
+```
+dove-projects/                # 项目集合
+├── dove-parent/             # 父项目仓库
+├── dove-common/            # 公共模块仓库
+├── dove-auth-service/      # 认证服务仓库
+├── dove-gateway/          # 网关服务仓库
+└── dove-auth-ui/          # 前端项目仓库
+```
+
+### 12.7 Deployment Structure | 部署结构
+```
+Production Environment/
+├── Region-AP/              # 亚太区域部署
+│   ├── dove-auth-service/  # 认证服务集群
+│   ├── dove-gateway/      # 网关服务集群
+│   └── dove-auth-ui/      # 前端应用集群
+│
+├── Region-EU/              # 欧洲区域部署
+│   ├── dove-auth-service/
+│   ├── dove-gateway/
+│   └── dove-auth-ui/
+│
+└── Region-NA/              # 北美区域部署
+    ├── dove-auth-service/
+    ├── dove-gateway/
+    └── dove-auth-ui/
+``` 

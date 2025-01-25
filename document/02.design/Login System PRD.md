@@ -16,17 +16,128 @@
 - 企业级微服务架构
 
 ### 0.3 Project Structure | 项目结构
-#### Backend Structure | 后端结构
-- 标准 Maven 父子项目结构
-- 父项目: `dove-parent`
-  - 统一依赖管理
-  - 统一版本控制
-  - 统一构建配置
-- 子项目: 独立的 Maven 微服务项目
-  - 独立目录结构
-  - 独立部署配置
-  - 独立 Git 仓库
-  - 继承父项目配置
+
+#### Repository Structure | 仓库结构
+每个项目都是独立的Git仓库，便于独立开发和部署：
+
+```
+dove-projects/
+├── dove-parent/                # 父项目仓库
+│   └── pom.xml                # 父POM，管理依赖版本
+│
+├── dove-common/               # 公共模块仓库
+│   ├── .git/                  # Git仓库
+│   ├── pom.xml               # 项目POM
+│   └── src/                  # 源代码
+│       └── main/
+│           ├── java/
+│           └── resources/
+│
+├── dove-auth-service/         # 认证服务仓库
+│   ├── .git/                  # Git仓库
+│   ├── pom.xml               # 项目POM
+│   ├── Dockerfile           # 容器化配置
+│   ├── docker-compose.yml   # 本地开发环境
+│   └── src/                  # 源代码
+│       ├── main/
+│       │   ├── java/
+│       │   └── resources/
+│       └── test/
+│
+├── dove-gateway/             # 网关服务仓库
+│   ├── .git/                  # Git仓库
+│   ├── pom.xml               # 项目POM
+│   ├── Dockerfile           # 容器化配置
+│   ├── docker-compose.yml   # 本地开发环境
+│   └── src/                  # 源代码
+│       ├── main/
+│       │   ├── java/
+│       │   └── resources/
+│       └── test/
+│
+└── dove-auth-ui/             # 前端项目仓库
+    ├── .git/                  # Git仓库
+    ├── package.json          # 项目配置
+    ├── Dockerfile           # 容器化配置
+    └── src/                  # 源代码
+        ├── components/
+        ├── pages/
+        └── utils/
+```
+
+#### Deployment Structure | 部署结构
+每个服务都是独立部署的微服务：
+
+```
+Kubernetes Cluster/
+├── dove-namespace/
+│   ├── dove-auth-service/     # 认证服务部署
+│   │   ├── deployment.yaml
+│   │   ├── service.yaml
+│   │   └── configmap.yaml
+│   │
+│   ├── dove-gateway/         # 网关服务部署
+│   │   ├── deployment.yaml
+│   │   ├── service.yaml
+│   │   └── configmap.yaml
+│   │
+│   └── dove-auth-ui/         # 前端应用部署
+│       ├── deployment.yaml
+│       ├── service.yaml
+│       └── ingress.yaml
+│
+├── shared-services/
+│   ├── nacos/                # 配置中心
+│   ├── redis/                # 缓存服务
+│   └── mysql/                # 数据库服务
+│
+└── monitoring/
+    ├── prometheus/           # 监控系统
+    └── grafana/              # 监控面板
+```
+
+#### Development Guidelines | 开发指南
+1. 每个服务都有自己的Git仓库，可以独立开发和版本控制
+2. 服务之间通过接口契约和版本管理保持兼容性
+3. 每个服务都有完整的CI/CD流程
+4. 本地开发使用docker-compose进行依赖服务的管理
+5. 测试环境和生产环境使用Kubernetes进行容器编排
+
+#### Build & Deployment | 构建和部署
+1. 构建流程
+   ```bash
+   # 构建公共模块
+   cd dove-common
+   mvn clean install
+
+   # 构建认证服务
+   cd dove-auth-service
+   mvn clean package
+   docker build -t dove-auth-service:latest .
+
+   # 构建网关服务
+   cd dove-gateway
+   mvn clean package
+   docker build -t dove-gateway:latest .
+
+   # 构建前端应用
+   cd dove-auth-ui
+   npm install
+   npm run build
+   docker build -t dove-auth-ui:latest .
+   ```
+
+2. 部署流程
+   ```bash
+   # 部署认证服务
+   kubectl apply -f dove-auth-service/k8s/
+
+   # 部署网关服务
+   kubectl apply -f dove-gateway/k8s/
+
+   # 部署前端应用
+   kubectl apply -f dove-auth-ui/k8s/
+   ```
 
 #### Naming Conventions | 命名规范
 - 项目命名规范
