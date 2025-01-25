@@ -244,6 +244,68 @@ CREATE TABLE `region_config` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
+#### 2.3.3 Tenant Tables | 租户表
+```sql
+-- 租户表
+CREATE TABLE `tenant` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `tenant_code` varchar(32) NOT NULL,
+  `tenant_name` varchar(100) NOT NULL,
+  `status` tinyint NOT NULL DEFAULT '1',
+  `edition` varchar(20) NOT NULL,
+  `max_users` int NOT NULL,
+  `max_storage` bigint NOT NULL,
+  `region` varchar(20) NOT NULL,
+  `database_config` json DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_tenant_code` (`tenant_code`),
+  KEY `idx_region` (`region`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 租户配置表
+CREATE TABLE `tenant_config` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `tenant_id` bigint NOT NULL,
+  `config_key` varchar(50) NOT NULL,
+  `config_value` text NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_tenant_key` (`tenant_id`, `config_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 租户资源配额表
+CREATE TABLE `tenant_quota` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `tenant_id` bigint NOT NULL,
+  `resource_type` varchar(20) NOT NULL,
+  `max_quota` bigint NOT NULL,
+  `used_quota` bigint NOT NULL DEFAULT '0',
+  `alert_threshold` int NOT NULL DEFAULT '80',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_tenant_resource` (`tenant_id`, `resource_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 租户订阅表
+CREATE TABLE `tenant_subscription` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `tenant_id` bigint NOT NULL,
+  `plan_code` varchar(20) NOT NULL,
+  `start_date` datetime NOT NULL,
+  `end_date` datetime NOT NULL,
+  `auto_renew` tinyint NOT NULL DEFAULT '0',
+  `status` varchar(20) NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_tenant_id` (`tenant_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
 ### 2.4 API Specifications | API规范
 
 #### 2.4.1 Authentication APIs | 认证API
@@ -481,4 +543,172 @@ sync_strategy:
     type: batch
     frequency: daily
     priority: low
+```
+
+### 2.9 Multi-Tenant Implementation | 多租户实现
+
+#### 2.9.1 Tenant Context Management | 租户上下文管理
+```java
+@Configuration
+public class TenantConfig {
+    @Bean
+    public TenantContextHolder tenantContextHolder() {
+        return new TenantContextHolder();
+    }
+    
+    @Bean
+    public TenantInterceptor tenantInterceptor() {
+        return new TenantInterceptor(tenantContextHolder());
+    }
+    
+    @Bean
+    public WebMvcConfigurer tenantWebMvcConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addInterceptors(InterceptorRegistry registry) {
+                registry.addInterceptor(tenantInterceptor())
+                    .addPathPatterns("/**")
+                    .excludePathPatterns("/public/**", "/auth/**");
+            }
+        };
+    }
+}
+```
+
+#### 2.9.2 Database Routing | 数据库路由
+```java
+@Configuration
+public class DataSourceConfig {
+    @Bean
+    public DataSource dynamicDataSource() {
+        Map<Object, Object> targetDataSources = new HashMap<>();
+        targetDataSources.put("DEFAULT", defaultDataSource());
+        
+        DynamicRoutingDataSource dataSource = new DynamicRoutingDataSource();
+        dataSource.setDefaultTargetDataSource(defaultDataSource());
+        dataSource.setTargetDataSources(targetDataSources);
+        
+        return dataSource;
+    }
+    
+    @Bean
+    public TenantDatabaseRouter tenantDatabaseRouter() {
+        return new TenantDatabaseRouter(tenantContextHolder());
+    }
+}
+```
+
+#### 2.9.3 Cache Strategy | 缓存策略
+```java
+@Configuration
+public class CacheConfig {
+    @Bean
+    public CacheManager tenantAwareCacheManager() {
+        RedisCacheManager.RedisCacheManagerBuilder builder = RedisCacheManager
+            .builder(redisConnectionFactory())
+            .cacheDefaults(defaultConfig());
+            
+        return new TenantAwareCacheManager(builder.build(), tenantContextHolder());
+    }
+    
+    private RedisCacheConfiguration defaultConfig() {
+        return RedisCacheConfiguration.defaultCacheConfig()
+            .entryTtl(Duration.ofMinutes(30))
+            .computePrefixWith(cacheName -> 
+                tenantContextHolder().getTenantId() + ":" + cacheName);
+    }
+}
+```
+
+#### 2.9.4 API Endpoints | API接口
+```yaml
+/api/v1/tenant:
+  post:
+    summary: 创建租户
+    request:
+      tenant_code: string
+      tenant_name: string
+      edition: string
+      max_users: number
+      region: string
+    response:
+      tenant_id: string
+      status: string
+      database_config: object
+
+  get:
+    summary: 获取租户信息
+    response:
+      tenant_code: string
+      tenant_name: string
+      status: string
+      edition: string
+      usage_statistics: object
+      subscription_info: object
+
+/api/v1/tenant/quota:
+  get:
+    summary: 获取资源配额
+    response:
+      resources:
+        - type: string
+          max_quota: number
+          used_quota: number
+          alert_threshold: number
+
+  put:
+    summary: 更新资源配额
+    request:
+      resource_type: string
+      max_quota: number
+      alert_threshold: number
+    response:
+      success: boolean
+      message: string
+
+/api/v1/tenant/subscription:
+  post:
+    summary: 订阅计划
+    request:
+      plan_code: string
+      auto_renew: boolean
+      payment_method: string
+    response:
+      subscription_id: string
+      start_date: string
+      end_date: string
+      status: string
+```
+
+#### 2.9.5 Tenant Metrics | 租户指标
+```yaml
+metrics:
+  - name: tenant_active_users
+    type: gauge
+    labels:
+      - tenant_id
+      - region
+    help: "Number of active users per tenant"
+
+  - name: tenant_api_requests
+    type: counter
+    labels:
+      - tenant_id
+      - api_path
+      - status
+    help: "Number of API requests per tenant"
+
+  - name: tenant_resource_usage
+    type: gauge
+    labels:
+      - tenant_id
+      - resource_type
+    help: "Resource usage per tenant"
+
+  - name: tenant_quota_utilization
+    type: gauge
+    labels:
+      - tenant_id
+      - resource_type
+    help: "Resource quota utilization percentage"
 ``` 
