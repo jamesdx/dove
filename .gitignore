@@ -1,0 +1,16 @@
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# IDE files
+.idea/
+*.iml
+*.iws
+.idea_modules/
+.vscode/
+*.swp
+*.swo
+.DS_Store
