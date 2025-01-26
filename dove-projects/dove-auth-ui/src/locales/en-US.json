@@ -1,19 +1,19 @@
 {
   "app": {
     "title": "Dove Auth System",
+    "product_info": "One account for Jira, Confluence, Trello and more.",
     "description": "Secure authentication system for global users"
   },
   "auth": {
     "login": {
-      "title": "Log in to your account",
+      "title": "Log in to continue",
       "subtitle": "Welcome back! Please enter your details",
       "email": {
         "label": "Email address",
         "placeholder": "Enter your email",
         "error": {
-          "required": "Email is required",
-          "invalid": "Please enter a valid email address",
-          "not_found": "No account found with this email"
+          "required": "Please enter your email",
+          "invalid": "Please enter a valid email address"
         }
       },
       "password": {
@@ -27,8 +27,11 @@
         "forgot": "Forgot password?"
       },
       "remember_me": "Remember me",
+      "remember_me_tip": "Stay logged in on this device",
       "submit": "Sign in",
-      "or": "Or continue with",
+      "or": "Or continue with:",
+      "cant_login": "Can't log in?",
+      "create_account": "Create an account",
       "no_account": "Don't have an account?",
       "sign_up": "Sign up"
     },
@@ -81,9 +84,10 @@
       "sign_in": "Sign in"
     },
     "social": {
-      "google": "Continue with Google",
-      "microsoft": "Continue with Microsoft",
-      "apple": "Continue with Apple"
+      "google": "Google",
+      "microsoft": "Microsoft",
+      "apple": "Apple",
+      "slack": "Slack"
     },
     "mfa": {
       "title": "Two-factor authentication",

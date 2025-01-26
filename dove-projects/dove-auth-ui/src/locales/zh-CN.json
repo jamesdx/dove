@@ -1,15 +1,15 @@
 {
   "app": {
-    "title": "Dove认证系统",
-    "description": "面向全球用户的安全认证系统"
+    "title": "Dove 认证系统",
+    "product_info": "一个账号访问 Jira、Confluence、Trello 等所有服务"
   },
   "auth": {
     "login": {
-      "title": "登录您的账户",
+      "title": "登录以继续",
       "subtitle": "欢迎回来！请输入您的账户信息",
       "email": {
         "label": "邮箱地址",
-        "placeholder": "请输入邮箱",
+        "placeholder": "输入您的邮箱",
         "error": {
           "required": "请输入邮箱",
           "invalid": "请输入有效的邮箱地址",
@@ -27,10 +27,13 @@
         "forgot": "忘记密码？"
       },
       "remember_me": "记住我",
+      "remember_me_tip": "在此设备上保持登录状态",
       "submit": "登录",
-      "or": "或者使用以下方式登录",
+      "or": "或继续使用：",
       "no_account": "还没有账户？",
-      "sign_up": "注册"
+      "sign_up": "注册",
+      "cant_login": "无法登录？",
+      "create_account": "创建账号"
     },
     "register": {
       "title": "创建您的账户",
@@ -81,9 +84,10 @@
       "sign_in": "登录"
     },
     "social": {
-      "google": "使用Google账号继续",
-      "microsoft": "使用Microsoft账号继续",
-      "apple": "使用Apple账号继续"
+      "google": "Google",
+      "microsoft": "Microsoft",
+      "apple": "Apple",
+      "slack": "Slack"
     },
     "mfa": {
       "title": "双因素认证",
