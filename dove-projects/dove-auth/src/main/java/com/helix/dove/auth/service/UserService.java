@@ -1,6 +1,9 @@
 package com.helix.dove.auth.service;
 
+import com.helix.dove.auth.dto.LoginDTO;
+import com.helix.dove.auth.dto.LoginResultDTO;
 import com.helix.dove.auth.dto.RegisterUserDTO;
+import com.helix.dove.auth.dto.ResetPasswordDTO;
 import com.helix.dove.auth.entity.User;
 
 /**
@@ -15,6 +18,29 @@ public interface UserService {
      * @return user info
      */
     User register(RegisterUserDTO registerUserDTO);
+
+    /**
+     * Login
+     *
+     * @param loginDTO login dto
+     * @return login result
+     */
+    LoginResultDTO login(LoginDTO loginDTO);
+
+    /**
+     * Reset password
+     *
+     * @param resetPasswordDTO reset password dto
+     */
+    void resetPassword(ResetPasswordDTO resetPasswordDTO);
+
+    /**
+     * Get user by username
+     *
+     * @param username username
+     * @return user info
+     */
+    User getUserByUsername(String username);
 
     /**
      * Check if username exists
@@ -39,6 +65,22 @@ public interface UserService {
      * @return true if exists
      */
     boolean checkMobileExists(String mobile);
+
+    /**
+     * Get user by email
+     *
+     * @param email email
+     * @return user info
+     */
+    User getUserByEmail(String email);
+
+    /**
+     * Get user by mobile
+     *
+     * @param mobile mobile
+     * @return user info
+     */
+    User getUserByMobile(String mobile);
 
     /**
      * Verify email verification code
