@@ -1,0 +1,116 @@
+{
+  "app": {
+    "title": "Dove Auth System",
+    "description": "Secure authentication system for global users"
+  },
+  "auth": {
+    "login": {
+      "title": "Log in to your account",
+      "subtitle": "Welcome back! Please enter your details",
+      "email": {
+        "label": "Email address",
+        "placeholder": "Enter your email",
+        "error": {
+          "required": "Email is required",
+          "invalid": "Please enter a valid email address",
+          "not_found": "No account found with this email"
+        }
+      },
+      "password": {
+        "label": "Password",
+        "placeholder": "Enter your password",
+        "error": {
+          "required": "Password is required",
+          "invalid": "Invalid password",
+          "locked": "Account is locked due to too many failed attempts"
+        },
+        "forgot": "Forgot password?"
+      },
+      "remember_me": "Remember me",
+      "submit": "Sign in",
+      "or": "Or continue with",
+      "no_account": "Don't have an account?",
+      "sign_up": "Sign up"
+    },
+    "register": {
+      "title": "Create your account",
+      "subtitle": "Join millions of users worldwide",
+      "username": {
+        "label": "Username",
+        "placeholder": "Choose a username",
+        "error": {
+          "required": "Username is required",
+          "invalid": "Username can only contain letters, numbers and underscores",
+          "taken": "This username is already taken"
+        }
+      },
+      "email": {
+        "label": "Email address",
+        "placeholder": "Enter your email",
+        "error": {
+          "required": "Email is required",
+          "invalid": "Please enter a valid email address",
+          "taken": "This email is already registered"
+        }
+      },
+      "password": {
+        "label": "Password",
+        "placeholder": "Create a password",
+        "error": {
+          "required": "Password is required",
+          "weak": "Password is too weak",
+          "invalid": "Password must contain at least 8 characters, including uppercase, lowercase, numbers and symbols"
+        }
+      },
+      "confirm_password": {
+        "label": "Confirm password",
+        "placeholder": "Confirm your password",
+        "error": {
+          "required": "Please confirm your password",
+          "mismatch": "Passwords do not match"
+        }
+      },
+      "terms": {
+        "text": "By signing up, you agree to our {terms} and {privacy}",
+        "terms": "Terms of Service",
+        "privacy": "Privacy Policy"
+      },
+      "submit": "Create account",
+      "or": "Or sign up with",
+      "have_account": "Already have an account?",
+      "sign_in": "Sign in"
+    },
+    "social": {
+      "google": "Continue with Google",
+      "microsoft": "Continue with Microsoft",
+      "apple": "Continue with Apple"
+    },
+    "mfa": {
+      "title": "Two-factor authentication",
+      "subtitle": "Enter the verification code sent to your device",
+      "code": {
+        "label": "Verification code",
+        "placeholder": "Enter 6-digit code",
+        "error": {
+          "required": "Verification code is required",
+          "invalid": "Invalid verification code"
+        }
+      },
+      "submit": "Verify",
+      "resend": "Resend code",
+      "try_another": "Try another method"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "back": "Back",
+    "save": "Save",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "close": "Close"
+  }
+} 

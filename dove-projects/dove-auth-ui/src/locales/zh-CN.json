@@ -1,0 +1,116 @@
+{
+  "app": {
+    "title": "Dove认证系统",
+    "description": "面向全球用户的安全认证系统"
+  },
+  "auth": {
+    "login": {
+      "title": "登录您的账户",
+      "subtitle": "欢迎回来！请输入您的账户信息",
+      "email": {
+        "label": "邮箱地址",
+        "placeholder": "请输入邮箱",
+        "error": {
+          "required": "请输入邮箱",
+          "invalid": "请输入有效的邮箱地址",
+          "not_found": "未找到该邮箱对应的账户"
+        }
+      },
+      "password": {
+        "label": "密码",
+        "placeholder": "请输入密码",
+        "error": {
+          "required": "请输入密码",
+          "invalid": "密码错误",
+          "locked": "由于多次失败尝试，账户已被锁定"
+        },
+        "forgot": "忘记密码？"
+      },
+      "remember_me": "记住我",
+      "submit": "登录",
+      "or": "或者使用以下方式登录",
+      "no_account": "还没有账户？",
+      "sign_up": "注册"
+    },
+    "register": {
+      "title": "创建您的账户",
+      "subtitle": "加入全球数百万用户",
+      "username": {
+        "label": "用户名",
+        "placeholder": "请选择用户名",
+        "error": {
+          "required": "请输入用户名",
+          "invalid": "用户名只能包含字母、数字和下划线",
+          "taken": "该用户名已被使用"
+        }
+      },
+      "email": {
+        "label": "邮箱地址",
+        "placeholder": "请输入邮箱",
+        "error": {
+          "required": "请输入邮箱",
+          "invalid": "请输入有效的邮箱地址",
+          "taken": "该邮箱已被注册"
+        }
+      },
+      "password": {
+        "label": "密码",
+        "placeholder": "请创建密码",
+        "error": {
+          "required": "请输入密码",
+          "weak": "密码强度太弱",
+          "invalid": "密码必须包含至少8个字符，包括大写字母、小写字母、数字和符号"
+        }
+      },
+      "confirm_password": {
+        "label": "确认密码",
+        "placeholder": "请确认密码",
+        "error": {
+          "required": "请确认密码",
+          "mismatch": "两次输入的密码不一致"
+        }
+      },
+      "terms": {
+        "text": "注册即表示您同意我们的{terms}和{privacy}",
+        "terms": "服务条款",
+        "privacy": "隐私政策"
+      },
+      "submit": "创建账户",
+      "or": "或者使用以下方式注册",
+      "have_account": "已有账户？",
+      "sign_in": "登录"
+    },
+    "social": {
+      "google": "使用Google账号继续",
+      "microsoft": "使用Microsoft账号继续",
+      "apple": "使用Apple账号继续"
+    },
+    "mfa": {
+      "title": "双因素认证",
+      "subtitle": "请输入发送到您设备的验证码",
+      "code": {
+        "label": "验证码",
+        "placeholder": "请输入6位验证码",
+        "error": {
+          "required": "请输入验证码",
+          "invalid": "验证码无效"
+        }
+      },
+      "submit": "验证",
+      "resend": "重新发送验证码",
+      "try_another": "尝试其他方式"
+    }
+  },
+  "common": {
+    "loading": "加载中...",
+    "error": "发生错误",
+    "success": "成功",
+    "continue": "继续",
+    "cancel": "取消",
+    "back": "返回",
+    "save": "保存",
+    "delete": "删除",
+    "confirm": "确认",
+    "close": "关闭"
+  }
+} 
