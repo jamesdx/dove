@@ -1,0 +1,49 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: dove-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+      config:
+        server-addr: localhost:8848
+        file-extension: yaml
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: dove-auth
+          uri: lb://dove-auth
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=1
+        - id: dove-user
+          uri: lb://dove-user
+          predicates:
+            - Path=/user/**
+          filters:
+            - StripPrefix=1
+    sentinel:
+      transport:
+        dashboard: localhost:8080
+      eager: true
+      scg:
+        fallback:
+          mode: response
+          response-status: 429
+          response-body: {"code":429,"message":"Too Many Requests","data":null}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always 
