@@ -1,6 +1,6 @@
 # Prompt
 
-以下是你的工作目标：请使用我提供的 **《Dove Brd Template CN.md》** PRD 模板，基于以下 **项目背景和业务需求**，编写一份 **完整、企业级、专业** 的 BRD（Business Requirement Document）。
+以下是你的工作目标：请使用我提供的 **《Dove Brd Template CN.md》** PRD 模板，基于以下 **项目背景和业务需求**，编写一份 **完整、企业级、专业** 的 BRD（Business Requirement Document），必须按照 **《Dove Brd Template CN.md》** 的章节结构和要求，完成所有章节内容。
 
 ---
 
@@ -15,6 +15,8 @@
   - 多终端支持（Web、移动端、平板等）。
   - 前后端分离，后端采用 **Spring Cloud** + **Spring Cloud Alibaba** 进行微服务化。
   - 技术栈需为 **开源、可商用**，社区活跃、文档完善、官方支持较好。
+  - 数据库使用 **MariaDB** 企业版（10.11 LTS）。
+  - 持久层使用 ** Spring JPA** 框架。
 - **核心业务需求**：精准地 **模仿 JIRA Web 登录**的所有功能，包括但不限于：
   - 用户名/密码登录
   - 多因素认证（若有）
