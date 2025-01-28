@@ -16,7 +16,17 @@
 
  Review 文档必须 要遵守指定 BRD Review 标准， 这个标准是 《Dove Brd Review Principle CN.md》 文件中指定的标准。 Review 文档必须基于基础需求和具体需求，其中，基础需求是：“一个能满足2亿用户，8000 万用户同时在线的 互联网 SaaS 国际化产品，这个产品给全球用户使用， 工作时间用频繁，非工作时间是工作时间的访问量30%， 产品支持多终端，技术要求使用前后端分离项目，后端采用 Spring Cloud 和 Spring Cloud Aliababa 的微服务架构 ， 要采用开源、可商用、文档、社区活跃、支持好的技术。 具体业务需求：准确无误的模仿 JIRA Web 登录的所有功能； Review同时要遵守 《Dove Brd Template CN.md》 文件中指定的章节结构和要求。 在 Review 前让 Cursor 说明下他理解的 Review 标准， Review 文档的目标， Review 文档的步骤， Review 文档的注意事项。 Review 提出修改意见， 并给出修改后的文档。
 
+## Review Tdd
+  Review 文档必须 要遵守指定 TDD Review 标准， 这个标准是 《TDD Review Principle CN.md》 文件中指定的标准。 Review 文档必须基于基础需求和具体需求，其中，基础需求是：“一个能满足2亿用户，8000 万用户同时在线的 互联网 SaaS 国际化产品，这个产品给全球用户使用， 工作时间用频繁，非工作时间是工作时间的访问量30%， 产品支持多终端，技术要求使用前后端分离项目，后端采用 Spring Cloud 和 Spring Cloud Aliababa 的微服务架构 ， 要采用开源、可商用、文档、社区活跃、支持好的技术。 具体业务需求：准确无误的模仿 JIRA Web 登录的所有功能； Review同时要遵守 《TDD Template CN.md》 文件中指定的章节结构和要求。 Review 要参考 BRD 文档 （BRD_Dove_Login_System.md）  和 PRD 文档 （PRD_Dove_Login_System.md）， 高级设计文档 （Architecture.md） 。  在 Review 前让 Cursor 说明下他理解的 Review 标准， Review 文档的目标， Review 文档的步骤， Review 文档的注意事项。 Review 提出修改意见， 并给出修改后的文档。
+
 第一步，通读 10 Login BRD Revew.md 文件后，第二步，告诉我这个文档要你执行的 prompt 是做什么的，第三步，请根据以上 Prompt 去执行，确保文档内容完整、专业，并能够满足 2 亿用户、8000 万用户同时在线的国际化 SaaS 产品的需求，同时准确无误地模仿 JIRA Web 的登录功能。；第四步，检查你是否按照 Prompt 执行了。
+
+
+
+
+# TDD
+你作为一位Prompt Enginer , 你的任务是为一位 有着20年经验的架构师编写一个 Prompt， 这个Promt 用于让 Cursor或者其他AI工具去编写，编写 技术设计文档（TDD）。第一原则必须根据 BRD 文档 （BRD_Dove_Login_System.md）和 PRD  需求去生成，同时 必须根据我提供的文档模版（Architecture.md） 格式去生成，基于下面的基础需求具体业务需求编写一个高阶技术设计方案文档 ，基础需求需求是：“一个能满足2亿用户，8000 万用户同时在线的 互联网 SaaS 国际化产品，这个产品给全球用户使用， 工作时间用频繁，非工作时间是工作时间的访问量30%， 产品支持多终端，技术要求使用前后端分离项目，后端采用 Spring Cloud 和 Spring Cloud Aliababa 的微服务架构 ， 要采用开源、可商用、文档、社区活跃、支持好的技术。 具体业务需求：准确无误的模仿 JIRA Web 登录的所有功能 。
+
 
 
 1. 系统总体架构（微服务拆分思路、前后端分离框架、数据库布局等）

@@ -182,6 +182,154 @@ graph TD
 
 ## 5. 总体架构设计（High-Level Architecture）
 
+### 5.1 登录认证模块（Authentication Module）
+
+#### 5.1.1 JIRA 登录功能分析（JIRA Login Features Analysis）
+
+##### A. 标准登录流程（Standard Login Flow）
+1. **登录入口（Login Entry）**
+   - 支持用户名/邮箱 + 密码登录
+   - 登录表单验证（前端 + 后端双重验证）
+   - 验证码防护机制（连续失败触发）
+   - "记住我"选项（默认 30 天）
+
+2. **认证流程（Authentication Process）**
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant G as Gateway
+    participant A as Auth Service
+    participant S as Security Service
+    
+    U->>F: 输入凭证
+    F->>F: 表单验证
+    F->>G: 提交登录请求
+    G->>A: 认证请求
+    A->>S: 安全检查
+    S-->>A: 检查结果
+    A-->>G: 认证结果
+    G-->>F: 返回Token
+    F-->>U: 登录成功/失败
+```
+
+3. **安全机制（Security Mechanisms）**
+   - 密码强度要求：至少8位，包含大小写字母、数字和特殊字符
+   - 登录失败处理：
+     * 5次失败触发验证码
+     * 10次失败锁定账号30分钟
+   - 异地登录检测：非常用地点登录需要邮件验证
+   - 会话管理：支持多端登录，可查看和管理所有活动会话
+
+##### B. 企业 SSO 集成（Enterprise SSO Integration）
+1. **支持的协议（Supported Protocols）**
+   - SAML 2.0
+   - OAuth 2.0
+   - OpenID Connect
+   - Atlassian Crowd SSO
+
+2. **SSO 配置（SSO Configuration）**
+   - IdP 元数据配置
+   - SP 证书管理
+   - 属性映射规则
+   - 登录流程定制
+
+3. **实现方案（Implementation Plan）**
+```mermaid
+graph TD
+    A[用户] --> B{SSO已配置?}
+    B -->|是| C[SSO登录]
+    B -->|否| D[标准登录]
+    C --> E[IdP认证]
+    E --> F{认证成功?}
+    F -->|是| G[创建会话]
+    F -->|否| H[错误提示]
+    D --> I[密码认证]
+```
+
+##### C. 多因素认证（Multi-Factor Authentication）
+1. **MFA 方式（MFA Methods）**
+   - 邮件验证码（默认）
+   - 短信验证码（需绑定手机）
+   - TOTP（Google Authenticator）
+   - 生物识别（指纹/面部）
+
+2. **触发场景（Trigger Scenarios）**
+   - 异地登录
+   - 敏感操作
+   - 管理员强制要求
+   - 用户自主开启
+
+3. **配置选项（Configuration Options）**
+   - MFA 强制策略
+   - 信任设备管理
+   - 备用验证方式
+   - 恢复码机制
+
+##### D. 会话管理（Session Management）
+1. **会话控制（Session Control）**
+   - Token 基于 JWT，包含必要的用户信息
+   - 支持会话续期（Refresh Token 机制）
+   - 可设置会话有效期（默认 8 小时）
+   - 支持会话并发控制
+
+2. **分布式会话（Distributed Session）**
+```mermaid
+graph TD
+    A[会话创建] --> B[Redis集群]
+    B --> C{是否有效?}
+    C -->|是| D[更新时间戳]
+    C -->|否| E[重新登录]
+    D --> F[返回会话]
+```
+
+3. **会话安全（Session Security）**
+   - 会话劫持防护
+   - 会话固定攻击防护
+   - 闲置超时自动登出
+   - 异常检测与终止
+
+##### E. 密码管理（Password Management）
+1. **密码策略（Password Policy）**
+   - 复杂度要求
+   - 历史密码检查
+   - 定期更换提醒
+   - 密码过期机制
+
+2. **找回流程（Recovery Process）**
+   - 邮件验证找回
+   - 安全问题验证
+   - 管理员重置
+   - 临时密码机制
+
+3. **存储安全（Storage Security）**
+   - PBKDF2 加密算法
+   - 加密盐值随机生成
+   - 密码哈希不可逆
+   - 定期加密算法升级
+
+##### F. 审计日志（Audit Logging）
+1. **日志内容（Log Content）**
+   - 登录尝试记录
+   - 密码修改记录
+   - MFA 操作记录
+   - 会话操作记录
+
+2. **日志处理（Log Processing）**
+```mermaid
+graph LR
+    A[日志生成] --> B[Kafka]
+    B --> C[Elasticsearch]
+    C --> D[Kibana展示]
+    C --> E[安全分析]
+```
+
+3. **合规要求（Compliance Requirements）**
+   - 日志保存 180 天
+   - 支持导出审计
+   - 敏感信息脱敏
+   - 访问权限控制
+
 ### 架构原则（Architecture Principles）
 
 1. **微服务架构**
