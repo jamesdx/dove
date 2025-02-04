@@ -1286,7 +1286,7 @@ npm:
 
 #### 6.5.1 整体项目结构
 ```
-dove/                                      # 项目根目录
+dove-project/                                      # 项目根目录
 ├── .github/                              # GitHub配置目录
 │   ├── workflows/                        # GitHub Actions工作流
 │   │   ├── build.yml                    # 构建流程
@@ -1488,13 +1488,13 @@ dove/                                      # 项目根目录
 项目结构说明：
 
 1. **核心服务模块**
-   - `dove-parent`: 统一依赖管理，包含代码质量检查配置
-   - `dove-common`: 公共功能模块，包含核心工具、Redis、安全等
-   - `dove-auth`: 认证服务，处理用户登录、OAuth2和SSO
-   - `dove-gateway`: API网关，负责路由、认证、限流等
-   - `dove-user`: 用户服务，管理用户信息和配置
-   - `dove-security`: 安全服务，处理MFA、验证码等
-   - `dove-monitor`: 监控服务，收集系统指标
+   - `dove-parent`: 它是 统一依赖管理，包含代码质量检查配置, 它 是maven  项目的 父项目，其他项目为子项目，其他子项目要继承 dove-parent项目，
+   - `dove-common`: 公共功能模块，包含核心工具、Redis、安全等，继承 `dove-parent`
+   - `dove-auth`: 认证服务，处理用户登录、OAuth2和SSO，继承 `dove-parent`
+   - `dove-gateway`: API网关，负责路由、认证、限流等，继承 `dove-parent`
+   - `dove-user`: 用户服务，管理用户信息和配置，继承 `dove-parent`
+   - `dove-security`: 安全服务，处理MFA、验证码等，继承 `dove-parent`
+   - `dove-monitor`: 监控服务，收集系统指标，继承 `dove-parent`
 
 2. **前端模块**
    - `dove-web`: React前端项目，采用TypeScript开发
