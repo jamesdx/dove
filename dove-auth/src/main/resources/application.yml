@@ -1,7 +1,7 @@
 server:
   port: 8081
   servlet:
-    context-path: /auth
+    context-path: /api
 
 spring:
   application:
@@ -16,10 +16,10 @@ spring:
         server-addr: ${NACOS_SERVER:localhost:8848}
         file-extension: yml
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/dove_auth
-    username: ${DB_USER:root}
-    password: ${DB_PASSWORD:root}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:postgresql://localhost:5432/dove_auth
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: update
@@ -27,6 +27,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
   redis:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
@@ -34,22 +35,41 @@ spring:
 
 security:
   jwt:
-    secret: ${JWT_SECRET:your-secret-key}
-    expiration: 86400000
+    secret: ${JWT_SECRET:your-256-bit-secret}
+    access-token-validity-seconds: 3600
+    refresh-token-validity-seconds: 86400
   oauth2:
     client:
       registration:
         google:
           client-id: ${GOOGLE_CLIENT_ID:}
           client-secret: ${GOOGLE_CLIENT_SECRET:}
+          scope:
+            - email
+            - profile
+
+auth:
+  server:
+    issuer: http://localhost:8081
+    support-refresh-token: true
+    reuse-refresh-token: false
+
+saml:
+  okta:
+    metadata-url: ${OKTA_METADATA_URL:}
+    entity-id: ${OKTA_ENTITY_ID:}
+    acs-url: ${OKTA_ACS_URL:}
 
 springdoc:
   api-docs:
-    path: /api-docs
+    path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+    enabled: true
 
 logging:
   level:
-    com.helix.dove: ${LOG_LEVEL:INFO}
-    org.springframework.security: DEBUG 
+    root: INFO
+    com.helix.dove: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: INFO 

@@ -6,43 +6,48 @@ import com.helix.dove.auth.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
-@RequiredArgsConstructor
-@Tag(name = "Authentication", description = "Authentication endpoints")
+@Tag(name = "Authentication", description = "Authentication API endpoints")
 public class AuthController {
 
     private final AuthenticationService authenticationService;
 
-    @PostMapping("/login")
-    @Operation(summary = "Login user", description = "Authenticate user and return JWT tokens")
-    public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
-        return ResponseEntity.ok(authenticationService.login(loginRequest));
+    public AuthController(AuthenticationService authenticationService) {
+        this.authenticationService = authenticationService;
     }
 
-    @PostMapping("/logout")
-    @Operation(summary = "Logout user", description = "Invalidate the user's token")
-    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String token) {
-        String bearerToken = token.substring(7);
-        authenticationService.logout(bearerToken);
-        return ResponseEntity.ok().build();
+    @PostMapping("/login")
+    @Operation(summary = "User login", description = "Authenticate user and return access token")
+    public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+        TokenResponse tokenResponse = authenticationService.login(loginRequest);
+        return ResponseEntity.ok(tokenResponse);
     }
 
     @PostMapping("/refresh")
     @Operation(summary = "Refresh token", description = "Get new access token using refresh token")
-    public ResponseEntity<TokenResponse> refreshToken(@RequestHeader("Authorization") String token) {
-        String refreshToken = token.substring(7);
-        return ResponseEntity.ok(authenticationService.refreshToken(refreshToken));
+    public ResponseEntity<TokenResponse> refreshToken(@RequestHeader("Authorization") String authorization) {
+        String refreshToken = authorization.substring(7); // Remove "Bearer " prefix
+        TokenResponse tokenResponse = authenticationService.refreshToken(refreshToken);
+        return ResponseEntity.ok(tokenResponse);
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "User logout", description = "Invalidate the current session")
+    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authorization) {
+        String accessToken = authorization.substring(7); // Remove "Bearer " prefix
+        authenticationService.logout(accessToken);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/validate")
-    @Operation(summary = "Validate token", description = "Validate if the token is still valid")
-    public ResponseEntity<Boolean> validateToken(@RequestHeader("Authorization") String token) {
-        String bearerToken = token.substring(7);
-        return ResponseEntity.ok(authenticationService.validateToken(bearerToken));
+    @Operation(summary = "Validate token", description = "Check if the provided token is valid")
+    public ResponseEntity<Boolean> validateToken(@RequestHeader("Authorization") String authorization) {
+        String token = authorization.substring(7); // Remove "Bearer " prefix
+        boolean isValid = authenticationService.validateToken(token);
+        return ResponseEntity.ok(isValid);
     }
 } 

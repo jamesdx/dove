@@ -5,7 +5,7 @@ import com.helix.dove.auth.dto.TokenResponse;
 
 public interface AuthenticationService {
     TokenResponse login(LoginRequest loginRequest);
-    void logout(String token);
+    void logout(String accessToken);
     TokenResponse refreshToken(String refreshToken);
     boolean validateToken(String token);
 } 
