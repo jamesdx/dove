@@ -6,259 +6,41 @@
 
     <groupId>com.dove</groupId>
     <artifactId>dove-parent</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
+
     <name>dove-parent</name>
-    <description>Dove Parent Project for Spring Cloud Microservices</description>
+    <description>Dove Parent Project for managing build configurations and plugins</description>
 
     <properties>
-        <!-- Basic Settings -->
+        <!-- Project Properties -->
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
-
-        <!-- Spring Ecosystem -->
-        <spring-boot.version>3.2.2</spring-boot.version>
-        <spring-cloud.version>2023.0.0</spring-cloud.version>
-        <spring-cloud-alibaba.version>2022.0.0.0</spring-cloud-alibaba.version>
-        
-        <!-- Database & ORM -->
-        <mysql.version>8.0.33</mysql.version>
-        <mybatis-plus.version>3.5.4.1</mybatis-plus.version>
-        <druid.version>1.2.20</druid.version>
-        <dynamic-datasource.version>4.2.0</dynamic-datasource.version>
-        <sharding-sphere.version>5.4.1</sharding-sphere.version>
-        
-        <!-- Cache & Queue -->
-        <redisson.version>3.24.3</redisson.version>
-        <rocketmq.version>5.1.4</rocketmq.version>
-        <caffeine.version>3.1.8</caffeine.version>
-        
-        <!-- Security -->
-        <spring-security.version>6.2.1</spring-security.version>
-        <jjwt.version>0.12.3</jjwt.version>
-        <jasypt.version>3.0.5</jasypt.version>
-        
-        <!-- Distributed Transaction -->
-        <seata.version>1.7.1</seata.version>
-        
-        <!-- Service Registry -->
-        <nacos.version>2.3.0</nacos.version>
-        
-        <!-- API Documentation -->
-        <knife4j.version>4.3.0</knife4j.version>
-        <springdoc.version>2.3.0</springdoc.version>
-        
-        <!-- Tools -->
-        <lombok.version>1.18.30</lombok.version>
-        <hutool.version>5.8.23</hutool.version>
-        <mapstruct.version>1.5.5.Final</mapstruct.version>
-        <guava.version>32.1.3-jre</guava.version>
-        <commons-lang3.version>3.13.0</commons-lang3.version>
-        <commons-io.version>2.15.1</commons-io.version>
-        <commons-collections4.version>4.4</commons-collections4.version>
-        
-        <!-- Testing -->
-        <junit-jupiter.version>5.10.1</junit-jupiter.version>
-        <mockito.version>5.8.0</mockito.version>
-        <testcontainers.version>1.19.3</testcontainers.version>
-        
-        <!-- Code Quality -->
-        <jacoco.version>0.8.11</jacoco.version>
-        <checkstyle.version>10.12.5</checkstyle.version>
-        <pmd.version>7.0.0-rc4</pmd.version>
-        <spotbugs.version>4.8.0</spotbugs.version>
-        <sonar.version>3.10.0.2594</sonar.version>
         
         <!-- Plugin Versions -->
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
         <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
         <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
-        <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
-        <maven-surefire-plugin.version>3.2.3</maven-surefire-plugin.version>
-        <maven-failsafe-plugin.version>3.2.3</maven-failsafe-plugin.version>
-        <versions-maven-plugin.version>2.16.1</versions-maven-plugin.version>
+        <maven-javadoc-plugin.version>3.6.0</maven-javadoc-plugin.version>
+        <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
+        <maven-failsafe-plugin.version>3.1.2</maven-failsafe-plugin.version>
+        <maven-deploy-plugin.version>3.1.1</maven-deploy-plugin.version>
         <maven-enforcer-plugin.version>3.4.1</maven-enforcer-plugin.version>
-        <dockerfile-maven-plugin.version>1.4.13</dockerfile-maven-plugin.version>
+        <maven-checkstyle-plugin.version>3.3.0</maven-checkstyle-plugin.version>
+        <jacoco-maven-plugin.version>0.8.10</jacoco-maven-plugin.version>
+        <spring-boot-maven-plugin.version>3.1.5</spring-boot-maven-plugin.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
-            <!-- Spring Boot Dependencies -->
+            <!-- Import Dove Dependencies BOM -->
             <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring-boot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <!-- Spring Cloud Dependencies -->
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>${spring-cloud.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <!-- Spring Cloud Alibaba Dependencies -->
-            <dependency>
-                <groupId>com.alibaba.cloud</groupId>
-                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
-                <version>${spring-cloud-alibaba.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <!-- Database -->
-            <dependency>
-                <groupId>mysql</groupId>
-                <artifactId>mysql-connector-java</artifactId>
-                <version>${mysql.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.baomidou</groupId>
-                <artifactId>mybatis-plus-boot-starter</artifactId>
-                <version>${mybatis-plus.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>druid-spring-boot-starter</artifactId>
-                <version>${druid.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.baomidou</groupId>
-                <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
-                <version>${dynamic-datasource.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.shardingsphere</groupId>
-                <artifactId>shardingsphere-jdbc-core</artifactId>
-                <version>${sharding-sphere.version}</version>
-            </dependency>
-
-            <!-- Cache & Queue -->
-            <dependency>
-                <groupId>org.redisson</groupId>
-                <artifactId>redisson-spring-boot-starter</artifactId>
-                <version>${redisson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.rocketmq</groupId>
-                <artifactId>rocketmq-spring-boot-starter</artifactId>
-                <version>${rocketmq.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.ben-manes.caffeine</groupId>
-                <artifactId>caffeine</artifactId>
-                <version>${caffeine.version}</version>
-            </dependency>
-
-            <!-- Security -->
-            <dependency>
-                <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt-api</artifactId>
-                <version>${jjwt.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt-impl</artifactId>
-                <version>${jjwt.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt-jackson</artifactId>
-                <version>${jjwt.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.ulisesbocchio</groupId>
-                <artifactId>jasypt-spring-boot-starter</artifactId>
-                <version>${jasypt.version}</version>
-            </dependency>
-
-            <!-- Distributed Transaction -->
-            <dependency>
-                <groupId>io.seata</groupId>
-                <artifactId>seata-spring-boot-starter</artifactId>
-                <version>${seata.version}</version>
-            </dependency>
-
-            <!-- Service Registry -->
-            <dependency>
-                <groupId>com.alibaba.nacos</groupId>
-                <artifactId>nacos-client</artifactId>
-                <version>${nacos.version}</version>
-            </dependency>
-
-            <!-- API Documentation -->
-            <dependency>
-                <groupId>com.github.xiaoymin</groupId>
-                <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
-                <version>${knife4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springdoc</groupId>
-                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-                <version>${springdoc.version}</version>
-            </dependency>
-
-            <!-- Tools -->
-            <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>${lombok.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>cn.hutool</groupId>
-                <artifactId>hutool-all</artifactId>
-                <version>${hutool.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.mapstruct</groupId>
-                <artifactId>mapstruct</artifactId>
-                <version>${mapstruct.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>${guava.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-lang3</artifactId>
-                <version>${commons-lang3.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-io</groupId>
-                <artifactId>commons-io</artifactId>
-                <version>${commons-io.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-collections4</artifactId>
-                <version>${commons-collections4.version}</version>
-            </dependency>
-
-            <!-- Testing -->
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter</artifactId>
-                <version>${junit-jupiter.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.mockito</groupId>
-                <artifactId>mockito-core</artifactId>
-                <version>${mockito.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>testcontainers-bom</artifactId>
-                <version>${testcontainers.version}</version>
+                <groupId>com.dove</groupId>
+                <artifactId>dove-dependencies</artifactId>
+                <version>${project.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -268,22 +50,7 @@
     <build>
         <pluginManagement>
             <plugins>
-                <!-- Spring Boot Maven Plugin -->
-                <plugin>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-maven-plugin</artifactId>
-                    <version>${spring-boot.version}</version>
-                    <configuration>
-                        <excludes>
-                            <exclude>
-                                <groupId>org.projectlombok</groupId>
-                                <artifactId>lombok</artifactId>
-                            </exclude>
-                        </excludes>
-                    </configuration>
-                </plugin>
-
-                <!-- Maven Compiler Plugin -->
+                <!-- Compiler Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
@@ -292,29 +59,18 @@
                         <source>${java.version}</source>
                         <target>${java.version}</target>
                         <encoding>${project.build.sourceEncoding}</encoding>
-                        <annotationProcessorPaths>
-                            <path>
-                                <groupId>org.projectlombok</groupId>
-                                <artifactId>lombok</artifactId>
-                                <version>${lombok.version}</version>
-                            </path>
-                            <path>
-                                <groupId>org.mapstruct</groupId>
-                                <artifactId>mapstruct-processor</artifactId>
-                                <version>${mapstruct.version}</version>
-                            </path>
-                        </annotationProcessorPaths>
+                        <parameters>true</parameters>
                     </configuration>
                 </plugin>
 
-                <!-- Maven Resources Plugin -->
+                <!-- Resources Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
                     <version>${maven-resources-plugin.version}</version>
                 </plugin>
 
-                <!-- Maven Source Plugin -->
+                <!-- Source Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
@@ -329,7 +85,7 @@
                     </executions>
                 </plugin>
 
-                <!-- Maven Javadoc Plugin -->
+                <!-- Javadoc Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
@@ -344,71 +100,37 @@
                     </executions>
                 </plugin>
 
-                <!-- Maven Surefire Plugin -->
+                <!-- Spring Boot Plugin -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot-maven-plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>repackage</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <!-- Test Plugins -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven-surefire-plugin.version}</version>
                 </plugin>
-
-                <!-- Maven Failsafe Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
                     <version>${maven-failsafe-plugin.version}</version>
                 </plugin>
 
-                <!-- Versions Maven Plugin -->
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>versions-maven-plugin</artifactId>
-                    <version>${versions-maven-plugin.version}</version>
-                </plugin>
-
-                <!-- Maven Enforcer Plugin -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>${maven-enforcer-plugin.version}</version>
-                    <executions>
-                        <execution>
-                            <id>enforce-versions</id>
-                            <goals>
-                                <goal>enforce</goal>
-                            </goals>
-                            <configuration>
-                                <rules>
-                                    <requireMavenVersion>
-                                        <version>[3.8.0,)</version>
-                                    </requireMavenVersion>
-                                    <requireJavaVersion>
-                                        <version>[17,)</version>
-                                    </requireJavaVersion>
-                                </rules>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-
-                <!-- Checkstyle Plugin -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-checkstyle-plugin</artifactId>
-                    <version>3.3.1</version>
-                    <dependencies>
-                        <dependency>
-                            <groupId>com.puppycrawl.tools</groupId>
-                            <artifactId>checkstyle</artifactId>
-                            <version>${checkstyle.version}</version>
-                        </dependency>
-                    </dependencies>
-                </plugin>
-
-                <!-- JaCoCo Plugin -->
+                <!-- Code Coverage -->
                 <plugin>
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
-                    <version>${jacoco.version}</version>
+                    <version>${jacoco-maven-plugin.version}</version>
                     <executions>
                         <execution>
                             <goals>
@@ -425,53 +147,65 @@
                     </executions>
                 </plugin>
 
-                <!-- Dockerfile Maven Plugin -->
+                <!-- Code Style Check -->
                 <plugin>
-                    <groupId>com.spotify</groupId>
-                    <artifactId>dockerfile-maven-plugin</artifactId>
-                    <version>${dockerfile-maven-plugin.version}</version>
-                </plugin>
-
-                <!-- SonarQube Plugin -->
-                <plugin>
-                    <groupId>org.sonarsource.scanner.maven</groupId>
-                    <artifactId>sonar-maven-plugin</artifactId>
-                    <version>${sonar.version}</version>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>${maven-checkstyle-plugin.version}</version>
+                    <configuration>
+                        <configLocation>checkstyle.xml</configLocation>
+                        <encoding>${project.build.sourceEncoding}</encoding>
+                        <consoleOutput>true</consoleOutput>
+                        <failsOnError>true</failsOnError>
+                        <linkXRef>false</linkXRef>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>validate</id>
+                            <phase>validate</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>
+
+        <plugins>
+            <!-- Enforcer Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>${maven-enforcer-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>enforce-versions</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>[3.8.0,)</version>
+                                </requireMavenVersion>
+                                <requireJavaVersion>
+                                    <version>[17,)</version>
+                                </requireJavaVersion>
+                                <requireProperty>
+                                    <property>project.build.sourceEncoding</property>
+                                    <regex>UTF-8</regex>
+                                </requireProperty>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 
-    <modules>
-        <module>dove-common</module>
-        <module>dove-framework</module>
-        <module>dove-auth</module>
-        <module>dove-gateway</module>
-        <module>dove-user</module>
-        <module>dove-security</module>
-        <module>dove-monitor</module>
-    </modules>
-
-    <repositories>
-        <repository>
-            <id>spring-milestones</id>
-            <name>Spring Milestones</name>
-            <url>https://repo.spring.io/milestone</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>spring-snapshots</id>
-            <name>Spring Snapshots</name>
-            <url>https://repo.spring.io/snapshot</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-        </repository>
-    </repositories>
-
     <profiles>
+        <!-- Development Profile -->
         <profile>
             <id>dev</id>
             <activation>
@@ -481,12 +215,16 @@
                 <spring.profiles.active>dev</spring.profiles.active>
             </properties>
         </profile>
+
+        <!-- Test Profile -->
         <profile>
             <id>test</id>
             <properties>
                 <spring.profiles.active>test</spring.profiles.active>
             </properties>
         </profile>
+
+        <!-- Production Profile -->
         <profile>
             <id>prod</id>
             <properties>
@@ -494,4 +232,17 @@
             </properties>
         </profile>
     </profiles>
+
+    <distributionManagement>
+        <repository>
+            <id>releases</id>
+            <name>Release Repository</name>
+            <url>http://nexus.dove.com/repository/maven-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>Snapshot Repository</name>
+            <url>http://nexus.dove.com/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project> 
