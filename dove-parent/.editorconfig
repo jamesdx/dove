@@ -1,0 +1,98 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+trim_trailing_whitespace = true
+
+# Java Source Files
+[*.{java,groovy,gradle}]
+indent_style = space
+indent_size = 4
+continuation_indent_size = 8
+max_line_length = 120
+
+# XML Files
+[*.{xml,xsd}]
+indent_style = space
+indent_size = 4
+continuation_indent_size = 8
+max_line_length = 120
+
+# YAML Files
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# Properties Files
+[*.properties]
+charset = utf-8
+trim_trailing_whitespace = true
+
+# Markdown Files
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# Shell Scripts
+[*.sh]
+end_of_line = lf
+indent_style = space
+indent_size = 2
+
+# Batch Scripts
+[*.{cmd,bat}]
+end_of_line = crlf
+indent_style = space
+indent_size = 2
+
+# JavaScript/TypeScript Files
+[*.{js,ts,jsx,tsx}]
+indent_style = space
+indent_size = 2
+max_line_length = 100
+
+# CSS/SCSS Files
+[*.{css,scss,sass,less}]
+indent_style = space
+indent_size = 2
+max_line_length = 100
+
+# HTML Files
+[*.{htm,html}]
+indent_style = space
+indent_size = 2
+max_line_length = 120
+
+# JSON Files
+[*.json]
+indent_style = space
+indent_size = 2
+
+# SQL Files
+[*.sql]
+indent_style = space
+indent_size = 2
+max_line_length = 120
+
+# Docker Files
+[{Dockerfile,*.dockerfile}]
+indent_style = space
+indent_size = 4
+
+# Git Config Files
+[.git*]
+indent_style = tab
+indent_size = 4
+
+# Maven Wrapper Files
+[mvnw]
+end_of_line = lf
+
+[mvnw.cmd]
+end_of_line = crlf 
