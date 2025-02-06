@@ -611,6 +611,106 @@
        - 建立依赖升级变更流程
        - 维护技术栈文档
 ### 2. 子模块 (微服务) 设计
+#### 2.0 架构图（Architecture Diagram）
+
+系统架构采用分层设计,各层职责和交互关系如下:
+
+1. **全球化接入层**
+   - Global LB: 全球负载均衡,就近接入
+   - CDN: 静态资源加速,降低延迟
+   - 流量分发到就近的 API Gateway
+
+2. **网关层 (API Gateway)**
+   - Spring Cloud Gateway 作为统一入口
+   - 提供认证授权、限流、路由等公共能力
+   - 与认证服务(Auth Service)交互进行token校验
+   - 根据路由规则转发请求到对应微服务
+
+3. **微服务集群**
+   - 认证服务(Auth Service):
+     * 处理登录认证请求
+     * 生成和验证 token
+     * 调用用户服务获取用户信息
+     * 调用安全服务进行安全检查
+     * 使用 Redis 存储 token 和会话信息
+   
+   - 用户服务(User Service): 
+     * 提供用户信息的CRUD操作
+     * 与 MariaDB 交互存储用户数据
+     * 被认证服务调用获取用户信息
+     * 被安全服务调用获取用户权限
+
+   - 安全服务(Security Service):
+     * 提供安全策略检查
+     * 记录安全审计日志到 Kafka
+     * 被认证服务调用进行登录安全检查
+     * 从用户服务获取用户权限信息
+
+   - 配置服务(Config Service):
+     * 从 Nacos 获取配置信息
+     * 为其他服务提供配置管理
+     * 配置变更实时推送
+
+4. **数据层**
+   - MariaDB: 存储用户数据、权限数据等
+   - Redis: 缓存 token、会话等数据
+   - Kafka: 收集安全日志、审计日志
+
+5. **基础设施层**
+   - Kubernetes: 容器编排与服务管理
+   - Nacos: 服务注册与配置管理
+   - 监控告警: 系统运行状态监控
+   - 日志中心: 统一日志收集分析
+
+```mermaid
+graph TD
+    subgraph 接入层[全球化接入层]
+        LB[Global LB]
+        CDN[CDN]
+    end
+
+    subgraph 网关层[API Gateway]
+        GW[Spring Cloud Gateway]
+        GW --> Auth[认证授权]
+        GW --> Rate[限流控制]
+        GW --> Route[路由转发]
+    end
+
+    subgraph 应用层[微服务集群]
+        AS[认证服务/Auth Service]
+        US[用户服务/User Service]
+        SS[安全服务/Security Service]
+        CS[配置服务/Config Service]
+    end
+
+    subgraph 数据层[数据存储]
+        DB[(MariaDB)]
+        Cache[(Redis)]
+        MQ[Kafka]
+    end
+
+    subgraph 基础设施[Cloud Native]
+        K8S[Kubernetes]
+        Nacos[注册配置中心]
+        Monitor[监控告警]
+        Log[日志中心]
+    end
+
+    LB --> CDN
+    CDN --> GW
+    GW --> AS
+    GW --> US
+    GW --> SS
+    GW --> CS
+
+    AS --> DB
+    AS --> Cache
+    US --> DB
+    SS --> DB
+    SS --> MQ
+    CS --> Nacos
+```
+
 
 #### 2.1 dove-common  
 ##### 2.1.0 核心要求
@@ -843,7 +943,7 @@
                    ├── SwaggerConfigTest.java    # Swagger配置单元测试
                    └── ApiVersionTest.java       # API版本单元测试
       ``` 
-##### 3.2 功能描述
+##### 2.1.2 功能描述
 
 1. dove-common-core 核心功能模块
    - 提供各类通用工具类
@@ -952,8 +1052,164 @@
      - 文档模板定制
      - 多语言支持
 
-##### 3.3 技术特性
-
+#### 2.2 dove-auth 
+##### 2.2.0 核心要求
+##### 2.2.1 基本信息
+   - 包名: com.dove.auth
+   - 版本号: 1.0.0
+   - 父项目: dove-parent
+   - 依赖管理: dove-dependencies
+   - 文件夹结构：
+    ```
+    dove-auth
+    ├── src
+    │   ├── main
+    │   │   ├── java
+    │   │   │   └── com.dove.auth
+    │   │   │       ├── api                    # 对外接口
+    │   │   │       │   ├── dto               # 数据传输对象
+    │   │   │       │   │   ├── LoginRequest.java      # 登录请求DTO
+    │   │   │       │   │   └── LoginResponse.java     # 登录响应DTO  
+    │   │   │       │   └── facade            # 外观接口
+    │   │   │       │       └── AuthFacade.java        # 认证服务外观接口
+    │   │   │       ├── config                # 配置类
+    │   │   │       │   ├── oauth2           # OAuth2配置
+    │   │   │       │   │   ├── OAuth2Config.java      # OAuth2主配置
+    │   │   │       │   │   └── OAuth2Properties.java  # OAuth2配置属性
+    │   │   │       │   ├── security         # 安全配置
+    │   │   │       │   │   ├── SecurityConfig.java    # 安全主配置
+    │   │   │       │   │   └── WebSecurityConfig.java # Web安全配置
+    │   │   │       │   └── web              # Web配置
+    │   │   │       │       └── WebMvcConfig.java      # MVC配置
+    │   │   │       ├── constant             # 常量定义
+    │   │   │       │   ├── AuthConstants.java         # 认证常量
+    │   │   │       │   └── SecurityConstants.java     # 安全常量
+    │   │   │       ├── controller           # 控制器
+    │   │   │       │   ├── login           # 登录相关
+    │   │   │       │   │   ├── LoginController.java   # 登录控制器
+    │   │   │       │   │   └── LogoutController.java  # 登出控制器
+    │   │   │       │   ├── oauth           # OAuth相关
+    │   │   │       │   │   └── OAuth2Controller.java  # OAuth2控制器
+    │   │   │       │   └── session         # 会话相关
+    │   │   │       │       └── SessionController.java # 会话控制器
+    │   │   │       ├── core                 # 核心模块
+    │   │   │       │   ├── auth            # 认证核心
+    │   │   │       │   │   ├── AuthenticationManager.java # 认证管理器
+    │   │   │       │   │   └── AuthorizationManager.java  # 授权管理器
+    │   │   │       │   ├── session         # 会话核心
+    │   │   │       │   │   └── SessionManager.java    # 会话管理器
+    │   │   │       │   └── token           # Token处理
+    │   │   │       │       ├── JwtTokenGenerator.java # JWT生成器
+    │   │   │       │       └── TokenValidator.java    # Token验证器
+    │   │   │       ├── domain              # 领域模型
+    │   │   │       │   ├── entity         # 实体类
+    │   │   │       │   │   ├── User.java           # 用户实体
+    │   │   │       │   │   └── LoginLog.java       # 登录日志实体
+    │   │   │       │   └── vo             # 值对象
+    │   │   │       │       └── LoginVO.java         # 登录值对象
+    │   │   │       ├── enums               # 枚举定义
+    │   │   │       │   ├── LoginType.java          # 登录类型枚举
+    │   │   │       │   └── LoginStatus.java        # 登录状态枚举
+    │   │   │       ├── exception           # 异常定义
+    │   │   │       │   ├── AuthException.java      # 认证异常
+    │   │   │       │   └── LoginException.java     # 登录异常
+    │   │   │       ├── repository          # 数据访问层
+    │   │   │       │   ├── UserRepository.java     # 用户数据访问接口
+    │   │   │       │   └── LoginLogRepository.java # 登录日志数据访问接口
+    │   │   │       ├── security            # 安全相关
+    │   │   │       │   ├── filter         # 安全过滤器
+    │   │   │       │   │   ├── JwtAuthFilter.java  # JWT认证过滤器
+    │   │   │       │   │   └── LoginFilter.java    # 登录过滤器
+    │   │   │       │   └── handler        # 安全处理器
+    │   │   │       │       ├── LoginSuccessHandler.java  # 登录成功处理器
+    │   │   │       │       └── LoginFailureHandler.java  # 登录失败处理器
+    │   │   │       ├── service             # 业务服务
+    │   │   │       │   ├── auth           # 认证服务
+    │   │   │       │   │   ├── AuthService.java         # 认证服务接口
+    │   │   │       │   │   └── AuthServiceImpl.java     # 认证服务实现
+    │   │   │       │   ├── oauth          # OAuth服务
+    │   │   │       │   │   ├── OAuth2Service.java       # OAuth2服务接口
+    │   │   │       │   │   └── OAuth2ServiceImpl.java   # OAuth2服务实现
+    │   │   │       │   └── user           # 用户服务
+    │   │   │       │       ├── UserService.java         # 用户服务接口
+    │   │   │       │       └── UserServiceImpl.java     # 用户服务实现
+    │   │   │       └── util                # 工具类
+    │   │   │           ├── PasswordEncoder.java    # 密码加密工具
+    │   │   │           └── TokenUtils.java         # Token工具类
+    │   │   └── resources
+    │   │       ├── i18n                    # 国际化资源
+    │   │       │   ├── messages_zh_CN.properties  # 中文资源
+    │   │       │   └── messages_en_US.properties  # 英文资源
+    │   │       ├── mapper                  # MyBatis映射
+    │   │       │   ├── UserMapper.xml            # 用户映射文件
+    │   │       │   └── LoginLogMapper.xml        # 登录日志映射文件
+    │   │       └── application.yml         # 应用配置
+    │   └── test                           # 测试代码
+    │       └── java
+    │           └── com.dove.auth
+    │               ├── controller         # 控制器测试
+    │               │   ├── LoginControllerTest.java    # 登录控制器测试
+    │               │   └── OAuth2ControllerTest.java   # OAuth2控制器测试
+    │               └── service           # 服务测试
+    │                   ├── AuthServiceTest.java        # 认证服务测试
+    │                   └── UserServiceTest.java        # 用户服务测试
+    └── pom.xml                          # 项目依赖
+    ```
+##### 2.2.2 需求描述
+###### 2.2.2.1 功能描述
+  - 2.2.2.1.1 模块职责描述
+   - 用户认证与授权管理
+     - 账号密码登录
+       - 支持用户名/邮箱/手机号登录
+       - 密码加密存储(BCrypt)
+       - 防暴力破解(错误次数限制)
+       - Remember Me 14天免登录
+     - OAuth2/SSO集成
+       - 支持OAuth2标准协议
+       - 对接企业内部SSO系统
+       - 支持多种授权模式
+     - 双因素认证(2FA)
+       - 支持Google Authenticator
+       - 支持短信验证码
+       - 支持邮箱验证码
+     - 第三方登录
+       - 支持企业微信登录
+       - 支持钉钉扫码登录
+       - 支持自定义第三方登录
+   - 会话管理
+     - Token签发与验证
+     - 会话状态维护
+     - 单点登录支持
+     - Remember Me功能
+   - 安全防护
+     - 密码加密存储
+     - 防暴力破解
+     - 登录日志审计
+     - 异常行为检测
+   - 用户体验
+     - 多语言支持
+     - 验证码服务
+     - 密码重置流程
+     - 登录状态保持
+  - 3.1.2 核心流程
+    ```mermaid
+    sequenceDiagram
+        participant C as Client
+        participant G as Gateway
+        participant A as Auth Service
+        participant U as User Service
+        participant R as Redis
+        
+        C->>G: 登录请求
+        G->>A: 转发认证
+        A->>U: 获取用户信息
+        U-->>A: 返回用户数据
+        A->>A: 验证密码
+        A->>R: 存储会话
+        A-->>G: 返回Token
+        G-->>C: 登录成功
+    ```    
+###### 2.2.2.2 非功能性需求
 1. 高性能设计
    - 异步非阻塞
    - 本地缓存优化
@@ -983,29 +1239,652 @@
    - 规范化日志
    - 监控告警
    - 文档完善
+##### 2.2.3 模块设计
+###### 2.2.3.1 核心类设计
+   - 用户认证与授权管理 
+     - 账号密码登录
+       - 支持用户名/邮箱/手机号登录
+         - 核心类:
+           - LoginTypeDetector: 登录类型检测器,通过正则表达式判断登录标识类型
+           - UserRepository: 用户数据访问接口,提供多字段查询方法
+           - AuthenticationProvider: 认证提供者,实现多字段登录认证逻辑
+           - LoginTypeEnum: 登录类型枚举,定义支持的登录方式
+           - LoginRequest: 登录请求DTO,包含登录标识和密码等信息
+           - LoginResponse: 登录响应DTO,包含token和用户信息等
+           - GatewayAuthenticationFilter: 网关认证过滤器,处理登录请求转发
+           - AuthenticationService: 认证服务,处理具体的认证逻辑
+           - TokenGenerator: Token生成器,生成JWT等token
+         - 实现方案:
+           - GatewayAuthenticationFilter 拦截登录请求并转发到Auth Service
+           - AuthenticationService 调用UserRepository获取用户信息
+           - AuthenticationProvider 验证密码
+           - TokenGenerator 生成token
+           - Redis存储会话信息
+           - 返回token给客户端
+       - 密码加密存储(BCrypt)
+         - 核心类:
+           - PasswordEncoder: 密码编码器接口
+           - BCryptPasswordEncoder: BCrypt实现的密码编码器
+           - SecurityConfig: 安全配置类
+           - PasswordValidator: 密码校验器,检查密码强度
+           - PasswordHistoryService: 密码历史服务,防止重复使用旧密码
+         - 实现方案:
+           - 使用 BCryptPasswordEncoder 进行密码加密,强度可配置
+           - 密码只存储密文,验证时使用 matches 方法比对
+           - 密码更新时校验强度和历史记录
+           - 支持定期强制修改密码
+       - 防暴力破解(错误次数限制)
+         - 核心类:
+           - LoginAttemptService: 登录尝试服务
+           - RedisTemplate: Redis操作模板
+           - LoginFailureHandler: 登录失败处理器
+           - IpBlockService: IP封禁服务
+           - SecurityAuditLogger: 安全审计日志记录
+         - 实现方案:
+           - Redis记录失败次数,key格式为 login:fail:{username}
+           - 超过阈值锁定账号,登录成功则清除记录
+           - 支持IP级别的封禁
+           - 记录详细的安全审计日志
+       - Remember Me 14天免登录
+         - 核心类:
+           - RememberMeServices: 记住我服务接口
+           - PersistentTokenRepository: 持久化token仓库
+           - RememberMeAuthenticationFilter: 记住我认证过滤器
+           - TokenCleanupService: 过期token清理服务
+           - DeviceInfoService: 设备信息服务
+         - 实现方案:
+           - 基于数据库存储remember-me token
+           - 用户勾选时生成token并写入cookie
+           - token有效期可配置
+           - 定期清理过期token
+           - 记录设备信息用于安全控制
+     - OAuth2/SSO集成
+       - 核心类:
+           - OAuth2LoginConfigurer: OAuth2登录配置器
+           - OAuth2UserService: OAuth2用户服务
+           - OAuth2AuthorizationRequestResolver: 授权请求解析器
+           - OAuth2TokenService: OAuth2令牌服务
+           - OAuth2ClientRepository: OAuth2客户端配置仓库
+       - 实现方案:
+           - 集成Spring Security OAuth2
+           - 支持标准OAuth2协议流程
+           - 可扩展对接不同的OAuth2提供商
+           - 统一的令牌管理
+           - 客户端配置动态管理
+     - 双因素认证(2FA)
+       - 核心类:
+           - TwoFactorAuthenticationProvider: 双因素认证提供者
+           - GoogleAuthenticator: Google验证器
+           - SmsCodeService: 短信验证码服务
+           - EmailCodeService: 邮箱验证码服务
+           - TwoFactorConfigService: 2FA配置服务
+       - 实现方案:
+           - 支持多种验证方式(Google/短信/邮箱)
+           - 验证码临时存储于Redis
+           - 可配置是否强制开启2FA
+           - 支持备用验证码
+           - 支持动态切换验证方式
+     - 第三方登录
+       - 核心类:
+           - ThirdPartyAuthenticationProvider: 第三方认证提供者
+           - WeChatLoginService: 企业微信登录服务
+           - DingTalkLoginService: 钉钉登录服务
+           - ThirdPartyUserMapper: 第三方用户映射器
+           - ThirdPartyConfigService: 第三方配置服务
+       - 实现方案:
+           - 实现第三方平台的OAuth流程
+           - 统一的用户信息映射机制
+           - 支持自定义登录提供商
+           - 配置动态管理
+           - 支持账号绑定/解绑
+   - 会话管理
+     - 核心类:
+       - TokenService: Token服务
+       - SessionRegistry: 会话注册表
+       - ConcurrentSessionFilter: 并发会话过滤器
+       - SessionMonitor: 会话监控器
+       - SessionCleanupService: 会话清理服务
+       - RedisSessionRepository: Redis会话存储
+     - 实现方案:
+       - JWT或Session实现会话管理
+       - Redis存储会话状态
+       - 支持会话并发控制
+       - 实时监控会话状态
+       - 定期清理过期会话
+   - 安全防护
+     - 核心类:
+       - SecurityAuditLogger: 安全审计日志
+       - BruteForceProtector: 暴力破解防护
+       - AbnormalLoginDetector: 异常登录检测
+       - SecurityEventPublisher: 安全事件发布器
+       - SecurityAlertService: 安全告警服务
+     - 实现方案:
+       - 完整的安全审计日志
+       - 多维度的攻击防护
+       - 异常行为实时检测
+       - 安全事件实时通知
+       - 支持自定义告警规则
+   - 用户体验
+     - 核心类:
+       - MessageSource: 国际化消息源
+       - CaptchaService: 验证码服务
+       - PasswordResetService: 密码重置服务
+       - UserPreferenceService: 用户偏好服务
+       - NotificationService: 通知服务
+     - 实现方案:
+       - 基于Spring国际化支持
+       - 多种验证码生成方案
+       - 标准的密码重置流程
+       - 个性化配置持久化
+       - 多渠道消息通知
+###### 2.2.3.2 数据模型设计
 
-2. **auth-service**  
-   - 模拟 **JIRA Web 登录**：  
-     - **表单字段**：`username`, `password`, `rememberMe`；  
-     - **错误提示**：与 JIRA 保持一致，如 "Sorry, your username and password are incorrect."；  
-     - **Remember Me**：Cookie 存储 + Session/Token；  
-     - 防暴力破解策略 (锁定或延时)；  
-     - 多语言支持，根据用户 locale 返回对应提示。  
-   - 可选：**2FA**(二次验证)、OAuth2 / SSO 整合。
+1. 用户认证相关表
+   - sys_user_third: 第三方用户关联表
+     - id: bigint(20) 主键
+     - user_id: bigint(20) 用户ID
+     - third_type: varchar(20) 第三方类型(WECHAT/DINGTALK)
+     - third_id: varchar(100) 第三方用户ID
+     - third_data: text 第三方用户数据
+     - bind_time: datetime 绑定时间
+     
+   - sys_user_password_history: 密码历史表
+     - id: bigint(20) 主键
+     - user_id: bigint(20) 用户ID 
+     - password: varchar(100) 历史密码
+     - create_time: datetime 创建时间
 
-3. **gateway-service**  
-   - **API 网关**：基于 Spring Cloud Gateway / Netflix Zuul；  
-   - 集成 **Sentinel / Resilience4j** 进行熔断限流，跨域处理；  
-   - 统一鉴权过滤器，与 `auth-service` 配合校验用户登录态；  
-   - 日志与追踪 (Sleuth/Zipkin/Micrometer) 可在此集中处理。
 
-4. **其他服务**  
-   - 业务领域服务 (user-service, product-service, order-service...)；  
-   - 各自管理数据库或外部存储；  
-   - 引入 `common-libs` 共享 DTO、工具、异常定义；  
-   - 依赖父 POM 版本锁定，一致的 Java 17、测试、Docker 打包策略。
+3. 安全审计相关表
+   - sys_login_log: 登录日志表
+     - id: bigint(20) 主键
+     - user_id: bigint(20) 用户ID
+     - login_type: varchar(20) 登录类型
+     - login_ip: varchar(50) 登录IP
+     - login_location: varchar(100) 登录地点
+     - browser: varchar(50) 浏览器
+     - os: varchar(50) 操作系统
+     - device_id: varchar(100) 设备ID
+     - status: tinyint(1) 状态(0-失败,1-成功)
+     - msg: varchar(255) 提示消息
+     - login_time: datetime 登录时间
 
----
+   - sys_operation_log: 操作日志表
+     - id: bigint(20) 主键
+     - user_id: bigint(20) 用户ID
+     - module: varchar(50) 操作模块
+     - operation: varchar(50) 操作类型
+     - method: varchar(100) 方法名
+     - params: text 请求参数
+     - time: bigint(20) 执行时长
+     - ip: varchar(50) 操作IP
+     - location: varchar(255) 操作地点
+     - status: int(1) 操作状态
+     - error_msg: text 错误消息
+     - create_time: datetime 创建时间
+
+   - sys_security_audit: 安全审计表
+     - id: bigint(20) 主键
+     - user_id: bigint(20) 用户ID
+     - event_type: varchar(50) 事件类型
+     - event_time: datetime 事件时间
+     - ip: varchar(50) IP地址
+     - details: text 详细信息
+     - risk_level: tinyint(1) 风险等级
+
+4. 会话管理相关表
+   - sys_user_token: 用户令牌表
+     - id: bigint(20) 主键
+     - user_id: bigint(20) 用户ID
+     - token: varchar(255) 令牌值
+     - token_type: varchar(20) 令牌类型(JWT/Session)
+     - refresh_token: varchar(255) 刷新令牌
+     - device_type: varchar(20) 设备类型
+     - expire_time: datetime 过期时间
+     - create_time: datetime 创建时间
+
+   - sys_user_online: 在线用户表
+     - id: bigint(20) 主键
+     - user_id: bigint(20) 用户ID
+     - token_id: varchar(255) 令牌ID
+     - browser: varchar(50) 浏览器
+     - os: varchar(50) 操作系统
+     - device_id: varchar(100) 设备ID
+     - ip: varchar(50) 登录IP
+     - location: varchar(255) 登录地点
+     - start_time: datetime 登录时间
+     - last_access_time: datetime 最后访问时间
+     - expire_time: datetime 过期时间
+
+   - sys_user_device: 用户设备表
+     - id: bigint(20) 主键
+     - user_id: bigint(20) 用户ID
+     - device_id: varchar(100) 设备ID
+     - device_type: varchar(20) 设备类型
+     - device_name: varchar(100) 设备名称
+     - last_login_time: datetime 最后登录时间
+     - is_trusted: tinyint(1) 是否受信任设备
+     - status: tinyint(1) 状态
+
+###### 2.2.3.3 测试用例设计
+1. 登录认证测试
+   - 核心测试类:
+     - LoginControllerTest: 登录接口测试
+       - testLoginWithUsername(): 测试用户名登录
+       - testLoginWithEmail(): 测试邮箱登录 
+       - testLoginWithPhone(): 测试手机号登录
+       - testLoginWithInvalidCredentials(): 测试无效凭证
+       - testLoginWithLockedAccount(): 测试账号锁定
+       - testRememberMeLogin(): 测试记住我功能
+       - testLoginFlow(): 测试完整登录流程(Gateway->Auth->User->Redis)
+       - testLoginTypeDetection(): 测试登录类型检测
+       - testPasswordStrengthValidation(): 测试密码强度校验
+       - testPasswordHistory(): 测试密码历史记录
+     
+     - AuthenticationServiceTest: 认证服务测试
+       - testPasswordValidation(): 测试密码验证
+       - testBruteForceProtection(): 测试暴力破解防护
+       - testLoginAttemptLocking(): 测试登录尝试锁定
+       - testTokenGeneration(): 测试Token生成
+       - testSessionManagement(): 测试会话管理
+       - testIpBasedBlocking(): 测试IP封禁
+       - testSecurityAuditLogging(): 测试安全审计日志
+       - testDeviceInfoTracking(): 测试设备信息追踪
+
+     - OAuth2LoginTest: OAuth2登录测试
+       - testOAuth2Flow(): 测试OAuth2流程
+       - testTokenExchange(): 测试令牌交换
+       - testUserInfoMapping(): 测试用户信息映射
+       - testClientValidation(): 测试客户端验证
+       - testDynamicClientConfig(): 测试动态客户端配置
+       - testTokenManagement(): 测试令牌管理
+
+2. 双因素认证测试
+   - 核心测试类:
+     - TwoFactorAuthTest: 2FA测试
+       - testGoogleAuthenticator(): 测试Google验证器
+       - testSmsVerification(): 测试短信验证
+       - testEmailVerification(): 测试邮箱验证
+       - testBackupCodes(): 测试备用码
+       - testSwitchAuthMethod(): 测试切换验证方式
+       - testForcedTwoFactor(): 测试强制2FA
+       - testTwoFactorConfig(): 测试2FA配置管理
+
+3. 第三方登录测试
+   - 核心测试类:
+     - ThirdPartyLoginTest: 第三方登录测试
+       - testWeChatLogin(): 测试企业微信登录
+       - testDingTalkLogin(): 测试钉钉登录
+       - testAccountBinding(): 测试账号绑定
+       - testAccountUnbinding(): 测试账号解绑
+       - testUserInfoMapping(): 测试用户信息映射
+       - testDynamicProviderConfig(): 测试动态提供商配置
+       - testCustomProvider(): 测试自定义登录提供商
+
+4. 会话管理测试
+   - 核心测试类:
+     - SessionManagementTest: 会话管理测试
+       - testTokenValidation(): 测试Token验证
+       - testConcurrentSessions(): 测试并发会话
+       - testSessionExpiry(): 测试会话过期
+       - testSessionCleanup(): 测试会话清理
+       - testRedisSessionStorage(): 测试Redis会话存储
+       - testSessionMonitoring(): 测试会话监控
+       - testSessionRegistry(): 测试会话注册表
+
+5. 安全防护测试
+   - 核心测试类:
+     - SecurityProtectionTest: 安全防护测试
+       - testAuditLogging(): 测试审计日志
+       - testAbnormalLoginDetection(): 测试异常登录检测
+       - testSecurityAlerts(): 测试安全告警
+       - testCustomRules(): 测试自定义规则
+       - testMultiDimensionalProtection(): 测试多维度攻击防护
+       - testRealTimeDetection(): 测试实时检测
+       - testAlertNotification(): 测试告警通知
+
+6. 用户体验测试
+   - 核心测试类:
+     - UserExperienceTest: 用户体验测试
+       - testI18nMessages(): 测试国际化消息
+       - testCaptchaValidation(): 测试验证码
+       - testPasswordReset(): 测试密码重置
+       - testUserPreferences(): 测试用户偏好
+       - testNotificationChannels(): 测试多渠道通知
+       - testPersonalizedConfig(): 测试个性化配置
+       - testMessageTemplates(): 测试消息模板
+
+7. 高可用性测试
+   - 核心测试类:
+     - HighAvailabilityTest: 高可用测试
+       - testAsyncNonBlocking(): 测试异步非阻塞
+       - testLocalCache(): 测试本地缓存
+       - testThreadPoolManagement(): 测试线程池管理
+       - testResourcePooling(): 测试资源池化
+       - testCircuitBreaker(): 测试熔断降级
+       - testRateLimiting(): 测试限流保护
+       - testLoadBalancing(): 测试负载均衡
+       - testFailureRetry(): 测试失败重试
+
+####### 3.3.2.1 测试方案概述
+1. 单元测试
+   - 使用JUnit 5编写测试用例
+   - Mockito模拟外部依赖
+   - AssertJ进行断言验证
+   - 测试覆盖率要求>80%
+
+2. 集成测试
+   - 使用TestContainers管理测试环境
+   - Spring Boot Test支持
+   - 模拟真实环境配置
+   - 端到端API测试
+
+3. 性能测试
+   - JMeter压力测试
+   - 验证高并发场景
+   - 监控系统指标
+   - 测试限流熔断
+
+4. 安全测试
+   - OWASP安全测试
+   - 渗透测试
+   - 弱密码测试
+   - SQL注入测试
+
+5. 自动化测试
+   - CI/CD流水线集成
+   - 自动化测试报告
+   - 测试环境管理
+   - 回归测试策略
+
+
+
+#### 2.3 dove-user
+
+##### 2.3.1 需求描述
+###### 2.3.1.1 功能描述
+  - 模块职责
+    - 用户信息管理
+    - 用户偏好设置
+    - 权限管理
+    - 用户数据同步
+
+  - 核心流程
+    ```mermaid
+    sequenceDiagram
+        participant C as Client
+        participant G as Gateway
+        participant U as User Service
+        participant DB as Database
+        participant Cache as Redis
+        
+        C->>G: 获取用户信息
+        G->>U: 转发请求
+        U->>Cache: 查询缓存
+        alt 缓存命中
+            Cache-->>U: 返回数据
+        else 缓存未命中
+            U->>DB: 查询数据库
+            DB-->>U: 返回数据
+            U->>Cache: 更新缓存
+        end
+        U-->>G: 返回用户信息
+        G-->>C: 响应
+    ```
+###### 2.3.1.2 非功能描述
+
+1. 性能需求
+   - 响应时间
+     - API平均响应时间 < 100ms
+     - 95%请求响应时间 < 200ms 
+     - 99.9%请求响应时间 < 500ms
+   - 并发能力
+     - 单实例支持 1000 QPS
+     - 可水平扩展支持更高并发
+     - 用户数据缓存命中率 > 95%
+   - 可用性
+     - 服务可用性 99.99%
+     - 故障恢复时间 < 1分钟
+     - 支持多活部署
+
+2. 安全需求
+   - 数据安全
+     - 敏感数据加密存储
+     - 传输数据TLS加密
+     - 定期数据备份
+   - 访问控制
+     - 基于RBAC的权限控制
+     - API访问鉴权
+     - 操作日志审计
+   - 防护措施
+     - SQL注入防护
+     - XSS防护
+     - CSRF防护
+
+3. 可维护性
+   - 代码规范
+     - 遵循阿里巴巴Java开发规范
+     - 单元测试覆盖率 > 80%
+     - 代码注释完整规范
+   - 监控运维
+     - 接入APM监控
+     - 全链路日志追踪
+     - 系统指标监控告警
+   - 文档支持
+     - 详细的API文档
+     - 运维手册
+     - 故障处理手册
+
+4. 扩展性
+   - 技术扩展
+     - 支持插件化扩展
+     - 预留技术升级接口
+     - 模块间低耦合
+   - 业务扩展
+     - 支持自定义用户属性
+     - 支持灵活的权限模型
+     - 支持多租户隔离
+
+5. 兼容性
+   - 系统兼容
+     - 支持主流Linux发行版
+     - 支持容器化部署
+     - 支持云原生架构
+   - 数据兼容
+     - 支持主流数据库
+     - 支持数据迁移工具
+     - 版本向下兼容
+
+
+##### 详细设计
+###### 2.3.2.1 数据模型设计 (Data Model Design)
+
+- 2.3.2.1.1 数据模型设计需要满足以下要点:
+
+1. 用户管理
+   - 支持用户基础信息管理 (dove_user表)
+     * 用户名、密码、邮箱、手机号等基础信息
+     * 用户状态、类型、租户等管理属性
+     * 最后登录时间、IP等统计信息
+     * 创建人、创建时间、更新人、更新时间等审计字段
+     * 版本号字段用于乐观锁控制
+   
+   - 支持用户详细信息扩展 (dove_user_info表)
+     * 真实姓名、头像、性别等个人信息
+     * 生日、地址等扩展信息
+     * 自定义字段支持(JSON格式)
+     * 创建人、创建时间、更新人、更新时间等审计字段
+     * 版本号字段用于乐观锁控制
+   
+   - 支持用户安全信息管理 (dove_user_security表)
+     * 密码修改历史记录(最近5次)
+     * 安全问题答案(加密存储)
+     * MFA认证配置(支持多种认证方式)
+     * 登录IP白名单(支持IP段)
+     * 安全等级设置(高中低)
+     * 创建人、创建时间、更新人、更新时间等审计字段
+     * 版本号字段用于乐观锁控制
+   
+   - 支持用户会话管理 (dove_user_session表)
+     * 会话Token记录(JWT格式)
+     * 登录设备信息(设备指纹)
+     * 会话状态跟踪(在线、离线、强制下线)
+     * 会话超时设置(可配置)
+     * 并发会话控制(最大会话数)
+     * 创建时间、更新时间、过期时间等时间字段
+   
+   - 支持用户组织架构管理 (dove_department表)
+     * 部门树形结构(左右值编码)
+     * 部门基本信息(编码、名称、简称)
+     * 部门负责人(支持多负责人)
+     * 上下级关系(层级限制)
+     * 部门权限范围(数据权限)
+     * 创建人、创建时间、更新人、更新时间等审计字段
+     * 版本号字段用于乐观锁控制
+   
+   - 支持用户权限角色管理 (dove_role, dove_permission表)
+     * 角色定义与分配(支持多角色)
+     * 权限项配置(细粒度权限控制)
+     * 角色-权限关系(多对多)
+     * 用户-角色关系(多对多)
+     * 权限继承体系(支持权限传递)
+     * 创建人、创建时间、更新人、更新时间等审计字段
+     * 版本号字段用于乐观锁控制
+
+
+
+2.3.2.1.2 数据表设计 (Database Table Design):
+
+根据用户管理、安全管理、系统管理和业务扩展的需求,设计以下数据表:
+
+1. 用户管理相关表
+   - dove_user: 用户基础信息表
+     * id: bigint(20) - 主键,雪花算法生成
+     * username: varchar(50) - 用户名,唯一索引
+     * password: varchar(128) - 密码,加密存储
+     * email: varchar(100) - 邮箱,唯一索引
+     * mobile: varchar(20) - 手机号,唯一索引
+     * status: tinyint - 状态(0-禁用,1-启用,2-锁定)
+     * type: tinyint - 用户类型(0-普通用户,1-管理员)
+     * tenant_id: bigint(20) - 租户ID
+     * dept_id: bigint(20) - 部门ID
+     * two_factor_enabled: tinyint - 是否启用双因素认证(0-禁用,1-启用)
+     * two_factor_type: varchar(20) - 双因素认证类型(GOOGLE/SMS/EMAIL)
+     * two_factor_secret: varchar(100) - 双因素认证密钥
+     * two_factor_recovery_codes: varchar(512) - 恢复码列表(JSON)
+     * created_by: bigint(20) - 创建人ID
+     * created_time: datetime - 创建时间
+     * updated_by: bigint(20) - 更新人ID
+     * updated_time: datetime - 更新时间
+     * deleted: tinyint - 逻辑删除标记
+     * version: int - 乐观锁版本号
+
+   - dove_user_info: 用户详细信息表
+     * id: bigint(20) - 主键,关联dove_user.id
+     * real_name: varchar(50) - 真实姓名
+     * avatar: varchar(255) - 头像URL
+     * gender: tinyint - 性别(0-未知,1-男,2-女)
+     * birthday: date - 生日
+     * country: varchar(50) - 国家
+     * province: varchar(50) - 省份
+     * city: varchar(50) - 城市
+     * address: varchar(255) - 详细地址
+     * timezone: varchar(50) - 时区
+     * language: varchar(20) - 语言偏好
+     * extend_fields: text - 扩展字段(JSON)
+     * created_by: bigint(20) - 创建人ID
+     * created_time: datetime - 创建时间
+     * updated_by: bigint(20) - 更新人ID
+     * updated_time: datetime - 更新时间
+     * version: int - 乐观锁版本号
+
+   - dove_user_security: 用户安全信息表
+     * id: bigint(20) - 主键,关联dove_user.id
+     * mfa_enabled: tinyint - 是否启用MFA
+     * mfa_key: varchar(128) - MFA密钥
+     * mfa_backup_codes: varchar(512) - MFA备用码
+     * password_policy: varchar(255) - 密码策略(JSON)
+     * password_reset_token: varchar(100) - 密码重置token
+     * token_expire_time: datetime - token过期时间
+     * login_attempts: int - 登录尝试次数
+     * lock_until: datetime - 锁定截止时间
+     * security_questions: varchar(512) - 安全问题(JSON)
+     * created_time: datetime - 创建时间
+     * updated_time: datetime - 更新时间
+
+
+   - dove_department: 部门组织架构表
+     * id: bigint(20) - 主键,雪花算法生成
+     * parent_id: bigint(20) - 父部门ID
+     * dept_code: varchar(50) - 部门编码
+     * dept_name: varchar(100) - 部门名称
+     * dept_short_name: varchar(50) - 部门简称
+     * leader_ids: varchar(255) - 负责人ID列表
+     * left_code: int - 左值编码
+     * right_code: int - 右值编码
+     * level: int - 层级深度
+     * sort: int - 排序号
+     * data_scope: varchar(255) - 数据权限范围
+     * tenant_id: bigint(20) - 租户ID
+     * created_by: bigint(20) - 创建人ID
+     * created_time: datetime - 创建时间
+     * updated_by: bigint(20) - 更新人ID
+     * updated_time: datetime - 更新时间
+     * deleted: tinyint - 逻辑删除标记
+     * version: int - 乐观锁版本号
+
+   - dove_role: 角色表
+     * id: bigint(20) - 主键,雪花算法生成
+     * role_code: varchar(50) - 角色编码
+     * role_name: varchar(100) - 角色名称
+     * role_type: tinyint - 角色类型(0-系统角色,1-自定义角色)
+     * status: tinyint - 状态(0-禁用,1-启用)
+     * data_scope: varchar(255) - 数据权限范围
+     * remark: varchar(255) - 备注说明
+     * tenant_id: bigint(20) - 租户ID
+     * created_by: bigint(20) - 创建人ID
+     * created_time: datetime - 创建时间
+     * updated_by: bigint(20) - 更新人ID
+     * updated_time: datetime - 更新时间
+     * deleted: tinyint - 逻辑删除标记
+     * version: int - 乐观锁版本号
+
+   - dove_permission: 权限表
+     * id: bigint(20) - 主键,雪花算法生成
+     * parent_id: bigint(20) - 父权限ID
+     * perm_code: varchar(100) - 权限编码
+     * perm_name: varchar(100) - 权限名称
+     * perm_type: tinyint - 权限类型(0-目录,1-菜单,2-按钮)
+     * path: varchar(255) - 路由地址
+     * component: varchar(255) - 组件路径
+     * perms: varchar(255) - 权限标识
+     * icon: varchar(100) - 图标
+     * sort: int - 排序号
+     * visible: tinyint - 是否可见
+     * status: tinyint - 状态(0-禁用,1-启用)
+     * tenant_id: bigint(20) - 租户ID
+     * created_by: bigint(20) - 创建人ID
+     * created_time: datetime - 创建时间
+     * updated_by: bigint(20) - 更新人ID
+     * updated_time: datetime - 更新时间
+     * deleted: tinyint - 逻辑删除标记
+     * version: int - 乐观锁版本号
+
+   - dove_user_role: 用户角色关联表
+     * id: bigint(20) - 主键,雪花算法生成
+     * user_id: bigint(20) - 用户ID
+     * role_id: bigint(20) - 角色ID
+     * tenant_id: bigint(20) - 租户ID
+     * created_time: datetime - 创建时间
+
+   - dove_role_permission: 角色权限关联表
+     * id: bigint(20) - 主键,雪花算法生成
+     * role_id: bigint(20) - 角色ID
+     * permission_id: bigint(20) - 权限ID
+     * tenant_id: bigint(20) - 租户ID
+     * created_time: datetime - 创建时间
+
+
 
 ## 三、关键特性与高并发支持
 
@@ -1058,6 +1937,9 @@
 ---
 
 ## 五、总结
+
+
+
 
 本需求文档描述了在 **2 亿用户、8000 万并发**的 **SaaS 国际化**场景下，如何使用 **Maven** 来统一管理 **多微服务**（基于 Spring Cloud & Alibaba）所需的依赖、插件和构建流程，并详细说明了 **JIRA Web 登录**的关键细节、国际化支持、高并发应对策略，以及 CI/CD、许可证合规等要求。  
 
