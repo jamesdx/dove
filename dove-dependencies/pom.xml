@@ -1,0 +1,751 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.dove</groupId>
+    <artifactId>dove-dependencies</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>dove-dependencies</name>
+    <description>Dove Dependencies BOM for managing dependency versions</description>
+
+    <properties>
+        <!-- Project Properties -->
+        <java.version>17</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+
+        <!-- Spring Ecosystem -->
+        <spring-boot.version>3.1.5</spring-boot.version>
+        <spring-cloud.version>2022.0.4</spring-cloud.version>
+        <spring-cloud-alibaba.version>2022.0.0.0</spring-cloud-alibaba.version>
+        
+        <!-- Database & ORM -->
+        <mysql.version>8.0.33</mysql.version>
+        <mybatis-plus.version>3.5.4.1</mybatis-plus.version>
+        <druid.version>1.2.20</druid.version>
+        <dynamic-datasource.version>4.2.0</dynamic-datasource.version>
+        <sharding-sphere.version>5.4.1</sharding-sphere.version>
+        <mariadb.version>3.1.4</mariadb.version>
+        <hibernate.version>6.2.13.Final</hibernate.version>
+        <hikaricp.version>5.0.1</hikaricp.version>
+        <flyway.version>9.22.3</flyway.version>
+        
+        <!-- Cache & Queue -->
+        <redisson.version>3.23.5</redisson.version>
+        <rocketmq.version>2.2.3</rocketmq.version>
+        <spring-kafka.version>3.0.12</spring-kafka.version>
+        <caffeine.version>3.1.8</caffeine.version>
+        
+        <!-- Security -->
+        <spring-security.version>6.1.5</spring-security.version>
+        <spring-security-oauth2-authorization-server.version>1.1.3</spring-security-oauth2-authorization-server.version>
+        <jjwt.version>0.11.5</jjwt.version>
+        <keycloak.version>23.0.3</keycloak.version>
+        <passay.version>1.6.3</passay.version>
+        <jasypt.version>3.0.5</jasypt.version>
+        
+        <!-- Distributed Transaction -->
+        <seata.version>1.7.1</seata.version>
+        
+        <!-- Service Registry -->
+        <nacos.version>2.3.0</nacos.version>
+        
+        <!-- Monitoring and Logging -->
+        <micrometer.version>1.11.5</micrometer.version>
+        <logstash-logback.version>7.4</logstash-logback.version>
+        <spring-boot-admin.version>3.1.7</spring-boot-admin.version>
+        <prometheus.version>0.16.0</prometheus.version>
+        
+        <!-- API Documentation -->
+        <knife4j.version>4.3.0</knife4j.version>
+        <springdoc.version>2.2.0</springdoc.version>
+        
+        <!-- Tools -->
+        <mapstruct.version>1.5.5.Final</mapstruct.version>
+        <lombok.version>1.18.30</lombok.version>
+        <hutool.version>5.8.23</hutool.version>
+        <commons-lang3.version>3.13.0</commons-lang3.version>
+        <commons-io.version>2.15.1</commons-io.version>
+        <commons-collections4.version>4.4</commons-collections4.version>
+        <guava.version>32.1.2-jre</guava.version>
+        <fastjson2.version>2.0.40</fastjson2.version>
+        
+        <!-- Testing -->
+        <testcontainers.version>1.19.1</testcontainers.version>
+        <mockito.version>5.7.0</mockito.version>
+        <junit-jupiter.version>5.10.0</junit-jupiter.version>
+        
+        <!-- File Storage and Processing -->
+        <minio.version>8.5.6</minio.version>
+        <aws-sdk-s3.version>1.12.261</aws-sdk-s3.version>
+        <poi.version>5.2.4</poi.version>
+        <easyexcel.version>3.3.2</easyexcel.version>
+
+        <!-- Spring Cloud Core Components -->
+        <spring-cloud-bootstrap.version>4.0.4</spring-cloud-bootstrap.version>
+        <spring-cloud-loadbalancer.version>4.0.4</spring-cloud-loadbalancer.version>
+        <spring-cloud-openfeign.version>4.0.4</spring-cloud-openfeign.version>
+        <spring-cloud-gateway.version>4.0.4</spring-cloud-gateway.version>
+        
+        <!-- Spring Cloud Alibaba Components -->
+        <spring-cloud-alibaba-nacos-discovery.version>2022.0.0.0</spring-cloud-alibaba-nacos-discovery.version>
+        <spring-cloud-alibaba-nacos-config.version>2022.0.0.0</spring-cloud-alibaba-nacos-config.version>
+        <spring-cloud-alibaba-sentinel.version>2022.0.0.0</spring-cloud-alibaba-sentinel.version>
+        
+        <!-- Security Additional -->
+        <spring-security-oauth2-resource-server.version>6.1.5</spring-security-oauth2-resource-server.version>
+        <spring-security-saml2-service-provider.version>6.1.5</spring-security-saml2-service-provider.version>
+        <spring-security-crypto.version>6.1.5</spring-security-crypto.version>
+        <spring-security-test.version>6.1.5</spring-security-test.version>
+        <otp.version>1.0.1</otp.version>
+        
+        <!-- Captcha -->
+        <kaptcha.version>2.3.3</kaptcha.version>
+        
+        <!-- Data Access Additional -->
+        <spring-session-data-redis.version>3.1.2</spring-session-data-redis.version>
+        <spring-session-jdbc.version>3.1.2</spring-session-jdbc.version>
+        <spring-session-hazelcast.version>3.1.2</spring-session-hazelcast.version>
+        <ehcache.version>3.10.8</ehcache.version>
+        
+        <!-- Reactive Programming -->
+        <spring-webflux.version>3.1.5</spring-webflux.version>
+        <reactor-test.version>3.5.11</reactor-test.version>
+        <reactor-tools.version>3.5.11</reactor-tools.version>
+        <spring-data-redis-reactive.version>3.1.5</spring-data-redis-reactive.version>
+        
+        <!-- Message Queue Additional -->
+        <spring-cloud-stream-kafka.version>4.0.4</spring-cloud-stream-kafka.version>
+        
+        <!-- Monitoring Additional -->
+        <spring-boot-starter-log4j2.version>3.1.5</spring-boot-starter-log4j2.version>
+        
+        <!-- Templates -->
+        <thymeleaf-extras-springsecurity6.version>3.1.2.RELEASE</thymeleaf-extras-springsecurity6.version>
+        <freemarker.version>2.3.32</freemarker.version>
+        <velocity-engine-core.version>2.3</velocity-engine-core.version>
+        <thymeleaf-spring6.version>3.1.2.RELEASE</thymeleaf-spring6.version>
+        
+        <!-- Development Tools -->
+        <javassist.version>3.29.2-GA</javassist.version>
+        <spring-boot-devtools.version>3.1.5</spring-boot-devtools.version>
+        <spring-boot-configuration-processor.version>3.1.5</spring-boot-configuration-processor.version>
+        <spring-boot-properties-migrator.version>3.1.5</spring-boot-properties-migrator.version>
+        <arthas-spring-boot-starter.version>3.7.1</arthas-spring-boot-starter.version>
+        
+        <!-- Search Engine -->
+        <lucene-core.version>9.8.0</lucene-core.version>
+        <hibernate-search-orm-orm6.version>6.2.1.Final</hibernate-search-orm-orm6.version>
+        
+        <!-- Communication -->
+        <grpc-spring-boot-starter.version>2.15.0.RELEASE</grpc-spring-boot-starter.version>
+        
+        <!-- Report Tools -->
+        <jasperreports.version>6.20.6</jasperreports.version>
+        <xdocreport.version>2.0.4</xdocreport.version>
+        
+        <!-- Task Schedule -->
+        <xxl-job-core.version>2.4.0</xxl-job-core.version>
+        
+        <!-- Performance Testing -->
+        <jmh-core.version>1.37</jmh-core.version>
+        
+        <!-- Tracing -->
+        <micrometer-tracing-bridge-brave.version>1.1.5</micrometer-tracing-bridge-brave.version>
+        <skywalking-agent.version>9.0.0</skywalking-agent.version>
+        
+        <!-- Document Processing -->
+        <aspose-words.version>23.10</aspose-words.version>
+        <itext7-core.version>8.0.2</itext7-core.version>
+        
+        <!-- Security Tools -->
+        <shield-core.version>1.0.1</shield-core.version>
+        <sensitive-core.version>1.0.0</sensitive-core.version>
+        <encryption-spring-boot-starter.version>1.0.0</encryption-spring-boot-starter.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring Boot Dependencies -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Spring Cloud Dependencies -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Spring Cloud Alibaba Dependencies -->
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>${spring-cloud-alibaba.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Database -->
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid-spring-boot-starter</artifactId>
+                <version>${druid.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
+                <version>${dynamic-datasource.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.shardingsphere</groupId>
+                <artifactId>shardingsphere-jdbc-core</artifactId>
+                <version>${sharding-sphere.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mariadb.jdbc</groupId>
+                <artifactId>mariadb-java-client</artifactId>
+                <version>${mariadb.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.hibernate.orm</groupId>
+                <artifactId>hibernate-core</artifactId>
+                <version>${hibernate.version}</version>
+            </dependency>
+
+            <!-- Cache & Queue -->
+            <dependency>
+                <groupId>org.redisson</groupId>
+                <artifactId>redisson-spring-boot-starter</artifactId>
+                <version>${redisson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.rocketmq</groupId>
+                <artifactId>rocketmq-spring-boot-starter</artifactId>
+                <version>${rocketmq.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.ben-manes.caffeine</groupId>
+                <artifactId>caffeine</artifactId>
+                <version>${caffeine.version}</version>
+            </dependency>
+
+            <!-- Security -->
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-oauth2-authorization-server</artifactId>
+                <version>${spring-security-oauth2-authorization-server.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-api</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-impl</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-jackson</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.keycloak</groupId>
+                <artifactId>keycloak-spring-boot-starter</artifactId>
+                <version>${keycloak.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.ulisesbocchio</groupId>
+                <artifactId>jasypt-spring-boot-starter</artifactId>
+                <version>${jasypt.version}</version>
+            </dependency>
+
+            <!-- Distributed Transaction -->
+            <dependency>
+                <groupId>io.seata</groupId>
+                <artifactId>seata-spring-boot-starter</artifactId>
+                <version>${seata.version}</version>
+            </dependency>
+
+            <!-- Service Registry -->
+            <dependency>
+                <groupId>com.alibaba.nacos</groupId>
+                <artifactId>nacos-client</artifactId>
+                <version>${nacos.version}</version>
+            </dependency>
+
+            <!-- API Documentation -->
+            <dependency>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
+                <version>${knife4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+
+            <!-- Tools -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>${hutool.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct-processor</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang3.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-collections4</artifactId>
+                <version>${commons-collections4.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${fastjson2.version}</version>
+            </dependency>
+
+            <!-- Testing -->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit-jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainers.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- File Storage and Processing -->
+            <dependency>
+                <groupId>io.minio</groupId>
+                <artifactId>minio</artifactId>
+                <version>${minio.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-s3</artifactId>
+                <version>${aws-sdk-s3.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>easyexcel</artifactId>
+                <version>${easyexcel.version}</version>
+            </dependency>
+
+            <!-- Internal Module Dependencies -->
+            <!-- Framework Layer -->
+            <dependency>
+                <groupId>com.dove</groupId>
+                <artifactId>dove-framework-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.dove</groupId>
+                <artifactId>dove-framework-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.dove</groupId>
+                <artifactId>dove-framework-data</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Common Layer -->
+            <dependency>
+                <groupId>com.dove</groupId>
+                <artifactId>dove-common-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.dove</groupId>
+                <artifactId>dove-common-util</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.dove</groupId>
+                <artifactId>dove-common-model</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Module Layer -->
+            <dependency>
+                <groupId>com.dove</groupId>
+                <artifactId>dove-module-system</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.dove</groupId>
+                <artifactId>dove-module-auth</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.dove</groupId>
+                <artifactId>dove-module-gateway</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- API Layer -->
+            <dependency>
+                <groupId>com.dove</groupId>
+                <artifactId>dove-api-system</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.dove</groupId>
+                <artifactId>dove-api-auth</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Spring Cloud Core Components -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-bootstrap</artifactId>
+                <version>${spring-cloud-bootstrap.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+                <version>${spring-cloud-loadbalancer.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-openfeign</artifactId>
+                <version>${spring-cloud-openfeign.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-gateway</artifactId>
+                <version>${spring-cloud-gateway.version}</version>
+            </dependency>
+
+            <!-- Spring Cloud Alibaba Components -->
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+                <version>${spring-cloud-alibaba-nacos-discovery.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+                <version>${spring-cloud-alibaba-nacos-config.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+                <version>${spring-cloud-alibaba-sentinel.version}</version>
+            </dependency>
+
+            <!-- Security Additional -->
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-oauth2-resource-server</artifactId>
+                <version>${spring-security-oauth2-resource-server.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-saml2-service-provider</artifactId>
+                <version>${spring-security-saml2-service-provider.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-crypto</artifactId>
+                <version>${spring-security-crypto.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-test</artifactId>
+                <version>${spring-security-test.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- Captcha -->
+            <dependency>
+                <groupId>com.github.penggle</groupId>
+                <artifactId>kaptcha</artifactId>
+                <version>${kaptcha.version}</version>
+            </dependency>
+
+            <!-- Session Management -->
+            <dependency>
+                <groupId>org.springframework.session</groupId>
+                <artifactId>spring-session-data-redis</artifactId>
+                <version>${spring-session-data-redis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.session</groupId>
+                <artifactId>spring-session-jdbc</artifactId>
+                <version>${spring-session-jdbc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.session</groupId>
+                <artifactId>spring-session-hazelcast</artifactId>
+                <version>${spring-session-hazelcast.version}</version>
+            </dependency>
+
+            <!-- Cache -->
+            <dependency>
+                <groupId>org.ehcache</groupId>
+                <artifactId>ehcache</artifactId>
+                <version>${ehcache.version}</version>
+            </dependency>
+
+            <!-- Reactive Programming -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-webflux</artifactId>
+                <version>${spring-webflux.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.projectreactor</groupId>
+                <artifactId>reactor-test</artifactId>
+                <version>${reactor-test.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.projectreactor</groupId>
+                <artifactId>reactor-tools</artifactId>
+                <version>${reactor-tools.version}</version>
+            </dependency>
+
+            <!-- Message Queue Additional -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-stream-kafka</artifactId>
+                <version>${spring-cloud-stream-kafka.version}</version>
+            </dependency>
+
+            <!-- Development Tools -->
+            <dependency>
+                <groupId>org.javassist</groupId>
+                <artifactId>javassist</artifactId>
+                <version>${javassist.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-devtools</artifactId>
+                <version>${spring-boot-devtools.version}</version>
+                <optional>true</optional>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-configuration-processor</artifactId>
+                <version>${spring-boot-configuration-processor.version}</version>
+                <optional>true</optional>
+            </dependency>
+            <dependency>
+                <groupId>com.taobao.arthas</groupId>
+                <artifactId>arthas-spring-boot-starter</artifactId>
+                <version>${arthas-spring-boot-starter.version}</version>
+            </dependency>
+
+            <!-- Search Engine -->
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-core</artifactId>
+                <version>${lucene-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.hibernate.search</groupId>
+                <artifactId>hibernate-search-orm-orm6</artifactId>
+                <version>${hibernate-search-orm-orm6.version}</version>
+            </dependency>
+
+            <!-- Templates -->
+            <dependency>
+                <groupId>org.thymeleaf.extras</groupId>
+                <artifactId>thymeleaf-extras-springsecurity6</artifactId>
+                <version>${thymeleaf-extras-springsecurity6.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.freemarker</groupId>
+                <artifactId>freemarker</artifactId>
+                <version>${freemarker.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.velocity</groupId>
+                <artifactId>velocity-engine-core</artifactId>
+                <version>${velocity-engine-core.version}</version>
+            </dependency>
+
+            <!-- Task Schedule -->
+            <dependency>
+                <groupId>com.xuxueli</groupId>
+                <artifactId>xxl-job-core</artifactId>
+                <version>${xxl-job-core.version}</version>
+            </dependency>
+
+            <!-- Performance Testing -->
+            <dependency>
+                <groupId>org.openjdk.jmh</groupId>
+                <artifactId>jmh-core</artifactId>
+                <version>${jmh-core.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- Tracing -->
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-tracing-bridge-brave</artifactId>
+                <version>${micrometer-tracing-bridge-brave.version}</version>
+            </dependency>
+
+            <!-- Document Processing -->
+            <dependency>
+                <groupId>com.aspose</groupId>
+                <artifactId>aspose-words</artifactId>
+                <version>${aspose-words.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.itextpdf</groupId>
+                <artifactId>itext7-core</artifactId>
+                <version>${itext7-core.version}</version>
+            </dependency>
+
+            <!-- Report Tools -->
+            <dependency>
+                <groupId>net.sf.jasperreports</groupId>
+                <artifactId>jasperreports</artifactId>
+                <version>${jasperreports.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>fr.opensagres.xdocreport</groupId>
+                <artifactId>xdocreport</artifactId>
+                <version>${xdocreport.version}</version>
+            </dependency>
+
+            <!-- Communication -->
+            <dependency>
+                <groupId>net.devh</groupId>
+                <artifactId>grpc-spring-boot-starter</artifactId>
+                <version>${grpc-spring-boot-starter.version}</version>
+            </dependency>
+
+            <!-- Security Tools -->
+            <dependency>
+                <groupId>com.dove</groupId>
+                <artifactId>shield-core</artifactId>
+                <version>${shield-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.dove</groupId>
+                <artifactId>sensitive-core</artifactId>
+                <version>${sensitive-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.dove</groupId>
+                <artifactId>encryption-spring-boot-starter</artifactId>
+                <version>${encryption-spring-boot-starter.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.4.1</version>
+                <executions>
+                    <execution>
+                        <id>enforce-versions</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>[3.8.0,)</version>
+                                </requireMavenVersion>
+                                <requireJavaVersion>
+                                    <version>[17,)</version>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <distributionManagement>
+        <repository>
+            <id>releases</id>
+            <name>Release Repository</name>
+            <url>http://nexus.dove.com/repository/maven-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>Snapshot Repository</name>
+            <url>http://nexus.dove.com/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+</project> 
