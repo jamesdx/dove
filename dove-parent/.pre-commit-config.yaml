@@ -1,0 +1,146 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim Trailing Whitespace
+        description: Removes trailing whitespace
+        types: [text]
+        stages: [commit]
+
+      - id: end-of-file-fixer
+        name: Fix End of Files
+        description: Ensures files end with a newline
+        types: [text]
+        stages: [commit]
+
+      - id: check-yaml
+        name: Check YAML
+        description: Checks yaml files for parseable syntax
+        types: [yaml]
+        stages: [commit]
+
+      - id: check-xml
+        name: Check XML
+        description: Checks xml files for parseable syntax
+        types: [xml]
+        stages: [commit]
+
+      - id: check-json
+        name: Check JSON
+        description: Checks json files for parseable syntax
+        types: [json]
+        stages: [commit]
+
+      - id: check-merge-conflict
+        name: Check for merge conflicts
+        description: Checks for files that contain merge conflict strings
+        types: [text]
+        stages: [commit]
+
+      - id: check-case-conflict
+        name: Check for case conflicts
+        description: Checks for files with names that would conflict on a case-insensitive filesystem
+        stages: [commit]
+
+      - id: detect-private-key
+        name: Detect Private Keys
+        description: Detects private keys
+        types: [text]
+        stages: [commit]
+
+  - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+    rev: v2.11.0
+    hooks:
+      - id: pretty-format-java
+        name: Format Java
+        description: Formats Java files using Google Java Format
+        types: [java]
+        stages: [commit]
+        args: [--autofix]
+
+      - id: pretty-format-yaml
+        name: Format YAML
+        description: Formats YAML files
+        types: [yaml]
+        stages: [commit]
+        args: [--autofix]
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks-java
+    rev: 1.3.10
+    hooks:
+      - id: validate-html
+        name: Validate HTML
+        description: Validates HTML files
+        types: [html]
+        stages: [commit]
+
+      - id: checkstyle
+        name: Run Checkstyle
+        description: Runs checkstyle on Java files
+        types: [java]
+        stages: [commit]
+        args: ["-c", "checkstyle.xml"]
+
+  - repo: local
+    hooks:
+      - id: forbid-binary
+        name: Forbid Binary Files
+        description: Prevents binary files from being committed
+        entry: bash -c 'echo "Binary files are not allowed in commits"; exit 1'
+        language: system
+        types: [binary]
+        stages: [commit]
+
+      - id: check-file-size
+        name: Check File Size
+        description: Prevents large files from being committed
+        entry: bash -c 'for file in "$@"; do if [ $(stat -f%z "$file") -gt 1048576 ]; then echo "File $file is too large (>1MB)"; exit 1; fi; done'
+        language: system
+        types: [text]
+        stages: [commit]
+
+      - id: maven-checkstyle
+        name: Run Maven Checkstyle
+        description: Runs Maven Checkstyle plugin
+        entry: bash -c 'mvn checkstyle:check'
+        language: system
+        types: [java]
+        pass_filenames: false
+        stages: [commit]
+
+      - id: maven-pmd
+        name: Run Maven PMD
+        description: Runs Maven PMD plugin
+        entry: bash -c 'mvn pmd:check'
+        language: system
+        types: [java]
+        pass_filenames: false
+        stages: [commit]
+
+      - id: maven-spotbugs
+        name: Run Maven SpotBugs
+        description: Runs Maven SpotBugs plugin
+        entry: bash -c 'mvn spotbugs:check'
+        language: system
+        types: [java]
+        pass_filenames: false
+        stages: [commit]
+
+      - id: check-java-main
+        name: Check Java Main Method
+        description: Prevents committing files with main method
+        entry: bash -c 'for file in "$@"; do if grep -l "public static void main" "$file"; then echo "Found main method in $file"; exit 1; fi; done'
+        language: system
+        types: [java]
+        exclude: '^src/test/.*$'
+        stages: [commit]
+
+      - id: check-java-system-out
+        name: Check Java System.out
+        description: Prevents committing files with System.out.println
+        entry: bash -c 'for file in "$@"; do if grep -l "System.out.println" "$file"; then echo "Found System.out.println in $file"; exit 1; fi; done'
+        language: system
+        types: [java]
+        exclude: '^src/test/.*$'
+        stages: [commit]

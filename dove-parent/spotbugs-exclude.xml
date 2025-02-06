@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter
+    xmlns="https://github.com/spotbugs/filter/3.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/3.1.0/spotbugs/etc/findbugsfilter.xsd">
+
+    <!-- Exclude test classes -->
+    <Match>
+        <Class name="~.*\.*Test" />
+    </Match>
+    <Match>
+        <Class name="~.*\.*Tests" />
+    </Match>
+    <Match>
+        <Class name="~.*\.*IT" />
+    </Match>
+
+    <!-- Exclude generated sources -->
+    <Match>
+        <Class name="~.*\.*MapperImpl" />
+    </Match>
+    <Match>
+        <Package name="~.*\.generated.*" />
+    </Match>
+
+    <!-- Exclude specific bugs in specific classes -->
+    <!-- Example: Exclude serialization warnings for DTOs -->
+    <Match>
+        <Bug pattern="SE_NO_SERIALVERSIONID" />
+        <Class name="~.*\.dto\..*" />
+    </Match>
+
+    <!-- Exclude specific bugs in specific methods -->
+    <Match>
+        <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE" />
+        <Method name="equals" />
+    </Match>
+
+    <!-- Exclude specific bugs in specific packages -->
+    <Match>
+        <Package name="~.*\.config.*" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- Exclude specific bugs in model classes -->
+    <Match>
+        <Class name="~.*\.model\..*" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- Exclude specific bugs in controller classes -->
+    <Match>
+        <Class name="~.*\.controller\..*" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- Exclude specific bugs in service classes -->
+    <Match>
+        <Class name="~.*\.service\..*" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- Exclude specific bugs in repository classes -->
+    <Match>
+        <Class name="~.*\.repository\..*" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- Exclude specific bugs in entity classes -->
+    <Match>
+        <Class name="~.*\.entity\..*" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- Exclude specific bugs in utility classes -->
+    <Match>
+        <Class name="~.*\.util\..*" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- Exclude specific bugs in configuration classes -->
+    <Match>
+        <Class name="~.*\.configuration\..*" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- Exclude specific bugs in exception classes -->
+    <Match>
+        <Class name="~.*\.exception\..*" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- Exclude specific bugs in constant classes -->
+    <Match>
+        <Class name="~.*\.constant\..*" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- Exclude specific bugs in enum classes -->
+    <Match>
+        <Class name="~.*\.enums\..*" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- Exclude specific bugs in converter classes -->
+    <Match>
+        <Class name="~.*\.converter\..*" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- Exclude specific bugs in validator classes -->
+    <Match>
+        <Class name="~.*\.validator\..*" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- Exclude specific bugs in listener classes -->
+    <Match>
+        <Class name="~.*\.listener\..*" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- Exclude specific bugs in handler classes -->
+    <Match>
+        <Class name="~.*\.handler\..*" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- Exclude specific bugs in interceptor classes -->
+    <Match>
+        <Class name="~.*\.interceptor\..*" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- Exclude specific bugs in aspect classes -->
+    <Match>
+        <Class name="~.*\.aspect\..*" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+</FindBugsFilter>
