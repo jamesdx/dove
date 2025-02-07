@@ -1,18 +1,21 @@
 package com.dove.auth.core.session.repository;
 
-import com.dove.auth.core.session.model.SessionInformation;
+import com.dove.auth.core.session.model.Session;
 import com.dove.common.core.utils.JsonUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * Redis会话仓库
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class RedisSessionRepository {
@@ -24,75 +27,114 @@ public class RedisSessionRepository {
     /**
      * 保存会话
      */
-    public void save(SessionInformation session) {
-        String sessionKey = getSessionKey(session.getSessionId());
-        String userSessionKey = getUserSessionKey(session.getLoginUser().getUserId());
+    public void save(Session session) {
+        try {
+            // 1. 序列化会话数据
+            String sessionJson = JsonUtils.toJson(session);
+            String sessionKey = getSessionKey(session.getId());
+            String userSessionKey = getUserSessionKey(session.getUserId());
 
-        // 保存会话信息
-        redisTemplate.opsForValue().set(sessionKey, JsonUtils.toJson(session));
-        // 设置过期时间
-        if (session.getExpireTime() != null) {
-            Duration duration = Duration.between(session.getLoginTime(), session.getExpireTime());
-            redisTemplate.expire(sessionKey, duration);
+            // 2. 设置过期时间
+            Duration timeout = Duration.between(LocalDateTime.now(), session.getExpireTime());
+
+            // 3. 保存到Redis
+            redisTemplate.opsForValue().set(sessionKey, sessionJson, timeout);
+            redisTemplate.opsForSet().add(userSessionKey, session.getId());
+
+            log.debug("会话保存成功: {}", session.getId());
+        } catch (Exception e) {
+            log.error("会话保存失败: {}", session.getId(), e);
+            throw new RuntimeException("会话保存失败", e);
         }
-
-        // 关联用户和会话
-        redisTemplate.opsForSet().add(userSessionKey, session.getSessionId());
     }
 
     /**
-     * 获取会话
+     * 查找会话
      */
-    public SessionInformation findById(String sessionId) {
-        String sessionKey = getSessionKey(sessionId);
-        String json = (String) redisTemplate.opsForValue().get(sessionKey);
-        return json != null ? JsonUtils.fromJson(json, SessionInformation.class) : null;
-    }
+    public Session findById(String id) {
+        try {
+            // 1. 从Redis读取数据
+            String sessionKey = getSessionKey(id);
+            String sessionJson = (String) redisTemplate.opsForValue().get(sessionKey);
+            if (sessionJson == null) {
+                return null;
+            }
 
-    /**
-     * 获取用户的所有会话
-     */
-    public Set<SessionInformation> findByUserId(Long userId) {
-        String userSessionKey = getUserSessionKey(userId);
-        Set<Object> sessionIds = redisTemplate.opsForSet().members(userSessionKey);
-        if (sessionIds == null) {
-            return Set.of();
+            // 2. 反序列化会话对象
+            Session session = JsonUtils.fromJson(sessionJson, Session.class);
+            if (session == null) {
+                return null;
+            }
+
+            // 3. 更新访问时间
+            if (!session.isExpired()) {
+                session.touch();
+                save(session);
+            }
+
+            return session;
+        } catch (Exception e) {
+            log.error("会话查找失败: {}", id, e);
+            return null;
         }
-        return sessionIds.stream()
-                .map(id -> findById((String) id))
-                .filter(session -> session != null && !session.isExpired())
-                .collect(Collectors.toSet());
     }
 
     /**
      * 删除会话
      */
-    public void deleteById(String sessionId) {
-        SessionInformation session = findById(sessionId);
-        if (session != null) {
-            String sessionKey = getSessionKey(sessionId);
-            String userSessionKey = getUserSessionKey(session.getLoginUser().getUserId());
-            redisTemplate.delete(sessionKey);
-            redisTemplate.opsForSet().remove(userSessionKey, sessionId);
+    public void deleteById(String id) {
+        try {
+            Session session = findById(id);
+            if (session != null) {
+                String sessionKey = getSessionKey(id);
+                String userSessionKey = getUserSessionKey(session.getUserId());
+                redisTemplate.delete(sessionKey);
+                redisTemplate.opsForSet().remove(userSessionKey, id);
+                log.debug("会话删除成功: {}", id);
+            }
+        } catch (Exception e) {
+            log.error("会话删除失败: {}", id, e);
         }
+    }
+
+    /**
+     * 获取用户的所有会话ID
+     */
+    public Set<String> findSessionIdsByUserId(Long userId) {
+        String userSessionKey = getUserSessionKey(userId);
+        Set<Object> sessionIds = redisTemplate.opsForSet().members(userSessionKey);
+        return sessionIds != null ? 
+               sessionIds.stream().map(Object::toString).collect(Collectors.toSet()) : 
+               Set.of();
+    }
+
+    /**
+     * 获取所有会话ID
+     */
+    public Set<String> getAllSessionIds() {
+        Set<String> keys = redisTemplate.keys(SESSION_KEY_PREFIX + "*");
+        return keys != null ? 
+               keys.stream()
+                   .map(key -> key.substring(SESSION_KEY_PREFIX.length()))
+                   .collect(Collectors.toSet()) : 
+               Set.of();
     }
 
     /**
      * 清理过期会话
      */
     public void cleanupExpiredSessions() {
-        // 获取所有会话key
-        Set<String> keys = redisTemplate.keys(SESSION_KEY_PREFIX + "*");
-        if (keys != null) {
-            for (String key : keys) {
-                String json = (String) redisTemplate.opsForValue().get(key);
-                if (json != null) {
-                    SessionInformation session = JsonUtils.fromJson(json, SessionInformation.class);
-                    if (session != null && session.isExpired()) {
-                        deleteById(session.getSessionId());
-                    }
+        try {
+            Set<String> allSessionIds = getAllSessionIds();
+            for (String id : allSessionIds) {
+                Session session = findById(id);
+                if (session != null && session.isExpired()) {
+                    deleteById(id);
                 }
             }
+            log.info("过期会话清理完成");
+        } catch (Exception e) {
+            log.error("过期会话清理失败", e);
         }
     }
 
