@@ -712,280 +712,6 @@ graph TD
 ```
 
 
-
-## 需求
-### 5.1 功能需求
-
-#### 5.1.1 网关服务
-
-##### 5.1.1.1 业务需求
-  - 1. 模块职责
-   - 路由转发
-     - 基于路径的动态路由配置
-     - 服务发现与注册中心集成
-     - 智能负载均衡策略
-     - 灰度发布与版本控制
-     - 请求重试与故障转移
-   - 统一认证鉴权
-     - Token统一校验
-     - 权限规则统一管理
-     - 认证结果缓存
-     - 认证服务对接集成
-   - 安全防护
-     - 黑白名单动态配置
-     - XSS/SQL注入防护
-     - 请求报文加解密
-     - 防重放攻击
-   - 流量治理
-     - 分布式限流
-     - 熔断降级策略
-     - 流量监控与统计
-     - 流量染色与追踪
-   - 统一日志
-     - 访问日志记录
-     - 错误日志采集
-     - 性能指标统计
-     - 链路追踪集成
-
-- 2. 核心流程
-   ```mermaid
-   sequenceDiagram
-       participant C as Client
-       participant G as Gateway
-       participant F as Filter Chain
-       participant S as Service
-       
-       C->>G: HTTP Request
-       G->>F: 进入过滤器链
-       F->>F: 1. 请求解析
-       F->>F: 2. 认证鉴权
-       F->>F: 3. 限流熔断
-       F->>F: 4. 路由转发
-       F->>S: 5. 调用服务
-       S-->>G: Service Response
-       G-->>C: HTTP Response
-   ```
-#### 5.1.2 认证服务
-
-2.2.2.1.1 模块职责描述
-   - 用户认证与授权管理
-     - 账号密码登录
-       - 支持用户名/邮箱/手机号登录
-       - 密码加密存储(BCrypt)
-       - 防暴力破解(错误次数限制)
-       - Remember Me 14天免登录
-     - OAuth2/SSO集成
-       - 支持OAuth2标准协议
-       - 对接企业内部SSO系统
-       - 支持多种授权模式
-     - 双因素认证(2FA)
-       - 支持Google Authenticator
-       - 支持短信验证码
-       - 支持邮箱验证码
-     - 第三方登录
-       - 支持企业微信登录
-       - 支持钉钉扫码登录
-       - 支持自定义第三方登录
-   - 会话管理
-     - Token签发与验证
-     - 会话状态维护
-     - 单点登录支持
-     - Remember Me功能
-   - 安全防护
-     - 密码加密存储
-     - 防暴力破解
-     - 登录日志审计
-     - 异常行为检测
-   - 用户体验
-     - 多语言支持
-     - 验证码服务
-     - 密码重置流程
-     - 登录状态保持
-  - 3.1.2 核心流程
-    ```mermaid
-    sequenceDiagram
-        participant C as Client
-        participant G as Gateway
-        participant A as Auth Service
-        participant U as User Service
-        participant R as Redis
-        
-        C->>G: 登录请求
-        G->>A: 转发认证
-        A->>U: 获取用户信息
-        U-->>A: 返回用户数据
-        A->>A: 验证密码
-        A->>R: 存储会话
-        A-->>G: 返回Token
-        G-->>C: 登录成功
-    ``` 
-  #### 5.1.3 用户服务 dove-user 
-    模块职责
-    - 用户信息管理
-    - 用户偏好设置
-    - 权限管理
-    - 用户数据同步
-
-  - 核心流程
-    ```mermaid
-    sequenceDiagram
-        participant C as Client
-        participant G as Gateway
-        participant U as User Service
-        participant DB as Database
-        participant Cache as Redis
-        
-        C->>G: 获取用户信息
-        G->>U: 转发请求
-        U->>Cache: 查询缓存
-        alt 缓存命中
-            Cache-->>U: 返回数据
-        else 缓存未命中
-            U->>DB: 查询数据库
-            DB-->>U: 返回数据
-            U->>Cache: 更新缓存
-        end
-        U-->>G: 返回用户信息
-        G-->>C: 响应
-    ``` 
-
-
-
-### 5.1 功能需求
-
-#### 5.1.1 网关服务
-
-##### 5.1.1.1 业务需求
-  - 1. 模块职责
-   - 路由转发
-     - 基于路径的动态路由配置
-     - 服务发现与注册中心集成
-     - 智能负载均衡策略
-     - 灰度发布与版本控制
-     - 请求重试与故障转移
-   - 统一认证鉴权
-     - Token统一校验
-     - 权限规则统一管理
-     - 认证结果缓存
-     - 认证服务对接集成
-   - 安全防护
-     - 黑白名单动态配置
-     - XSS/SQL注入防护
-     - 请求报文加解密
-     - 防重放攻击
-   - 流量治理
-     - 分布式限流
-     - 熔断降级策略
-     - 流量监控与统计
-     - 流量染色与追踪
-   - 统一日志
-     - 访问日志记录
-     - 错误日志采集
-     - 性能指标统计
-     - 链路追踪集成
-
-- 2. 核心流程
-   ```mermaid
-   sequenceDiagram
-       participant C as Client
-       participant G as Gateway
-       participant F as Filter Chain
-       participant S as Service
-       
-       C->>G: HTTP Request
-       G->>F: 进入过滤器链
-       F->>F: 1. 请求解析
-       F->>F: 2. 认证鉴权
-       F->>F: 3. 限流熔断
-       F->>F: 4. 路由转发
-       F->>S: 5. 调用服务
-       S-->>G: Service Response
-       G-->>C: HTTP Response
-   ```
-#### 5.1.2 认证服务
-
-2.2.2.1.1 模块职责描述
-   - 用户认证与授权管理
-     - 账号密码登录
-       - 支持用户名/邮箱/手机号登录
-       - 密码加密存储(BCrypt)
-       - 防暴力破解(错误次数限制)
-       - Remember Me 14天免登录
-     - OAuth2/SSO集成
-       - 支持OAuth2标准协议
-       - 对接企业内部SSO系统
-       - 支持多种授权模式
-     - 双因素认证(2FA)
-       - 支持Google Authenticator
-       - 支持短信验证码
-       - 支持邮箱验证码
-     - 第三方登录
-       - 支持企业微信登录
-       - 支持钉钉扫码登录
-       - 支持自定义第三方登录
-   - 会话管理
-     - Token签发与验证
-     - 会话状态维护
-     - 单点登录支持
-     - Remember Me功能
-   - 安全防护
-     - 密码加密存储
-     - 防暴力破解
-     - 登录日志审计
-     - 异常行为检测
-   - 用户体验
-     - 多语言支持
-     - 验证码服务
-     - 密码重置流程
-     - 登录状态保持
-  - 3.1.2 核心流程
-    ```mermaid
-    sequenceDiagram
-        participant C as Client
-        participant G as Gateway
-        participant A as Auth Service
-        participant U as User Service
-        participant R as Redis
-        
-        C->>G: 登录请求
-        G->>A: 转发认证
-        A->>U: 获取用户信息
-        U-->>A: 返回用户数据
-        A->>A: 验证密码
-        A->>R: 存储会话
-        A-->>G: 返回Token
-        G-->>C: 登录成功
-    ``` 
-  #### 5.1.3 用户服务 dove-user 
-    模块职责
-    - 用户信息管理
-    - 用户偏好设置
-    - 权限管理
-    - 用户数据同步
-
-  - 核心流程
-    ```mermaid
-    sequenceDiagram
-        participant C as Client
-        participant G as Gateway
-        participant U as User Service
-        participant DB as Database
-        participant Cache as Redis
-        
-        C->>G: 获取用户信息
-        G->>U: 转发请求
-        U->>Cache: 查询缓存
-        alt 缓存命中
-            Cache-->>U: 返回数据
-        else 缓存未命中
-            U->>DB: 查询数据库
-            DB-->>U: 返回数据
-            U->>Cache: 更新缓存
-        end
-        U-->>G: 返回用户信息
-        G-->>C: 响应
-    ``` 
-
 #### 2.1 dove-common  
 ##### 2.1.0 核心要求
 - dove-common 是 dove-parent  的子模块， 但是独立的文件夹和git 仓库
@@ -2096,156 +1822,565 @@ graph TD
            - 支持自定义登录提供商
            - 配置动态管理
            - 支持账号绑定/解绑
-   - 会话管理
+   - 2.2.3.1.2 会话管理
+     - 时序图
+     ```mermaid
+       sequenceDiagram
+           participant C as Client
+           participant TS as TokenService
+           participant SR as SessionRegistry
+           participant CSF as ConcurrentSessionFilter
+           participant SM as SessionMonitor
+           participant SCS as SessionCleanupService
+           participant RSR as RedisSessionRepository
+           participant R as Redis
+
+           %% Token 生成和验证流程
+           C->>TS: generateToken(user)
+           TS->>R: 保存Token
+           TS-->>C: 返回Token
+
+           C->>TS: validateToken(token)
+           TS->>R: 验证Token状态
+           TS-->>C: 返回验证结果
+
+           %% 会话管理流程
+           C->>SR: registerNewSession(sessionId, user)
+           SR->>RSR: save(session)
+           RSR->>R: 保存会话数据
+           SR-->>C: 返回注册结果
+
+           C->>CSF: doFilter(request)
+           CSF->>SR: 检查会话状态
+           CSF->>CSF: 验证并发限制
+           CSF-->>C: 返回处理结果
+
+           %% 会话监控和清理流程
+           SM->>SR: monitorSessions()
+           SM->>SM: 统计会话指标
+           SM->>SM: 发送告警
+
+           SCS->>RSR: cleanupExpiredSessions()
+           RSR->>R: 清理过期数据
+           SCS->>SR: 更新会话状态
+       ``` 
      - 核心类:
-       - TokenService: Token服务
-       - SessionRegistry: 会话注册表
-       - ConcurrentSessionFilter: 并发会话过滤器
-       - SessionMonitor: 会话监控器
-       - SessionCleanupService: 会话清理服务
-       - RedisSessionRepository: Redis会话存储
+       
+
+       - TokenService: Token服务,负责Token的生成、验证和管理
+         - 方法:
+           - generateToken(UserDetails user): 生成用户Token
+             - 逻辑:
+               1. 获取用户信息
+               2. 设置Token过期时间
+               3. 生成JWT Token
+               4. 保存Token到Redis
+           - validateToken(String token): 验证Token有效性
+             - 逻辑:
+               1. 解析Token
+               2. 检查Token是否过期
+               3. 验证Token签名
+               4. 从Redis验证Token状态
+           - revokeToken(String token): 撤销Token
+             - 逻辑:
+               1. 从Redis删除Token
+               2. 记录Token撤销日志
+
+       - SessionRegistry: 会话注册表,管理在线会话信息
+         - 方法:
+           - registerNewSession(String sessionId, UserDetails user): 注册新会话
+             - 逻辑:
+               1. 检查用户并发会话数
+               2. 保存会话信息
+               3. 更新用户会话计数
+           - removeSession(String sessionId): 移除会话
+             - 逻辑:
+               1. 清理会话数据
+               2. 更新用户会话计数
+               3. 触发会话结束事件
+
+       - ConcurrentSessionFilter: 并发会话过滤器,控制用户同时在线数
+         - 方法:
+           - doFilter(request, response): 会话并发控制
+             - 逻辑:
+               1. 获取当前会话信息
+               2. 检查会话是否过期
+               3. 验证并发会话数限制
+               4. 处理超出限制的会话
+
+       - SessionMonitor: 会话监控器,监控会话状态
+         - 方法:
+           - monitorSessions(): 监控会话状态
+             - 逻辑:
+               1. 定期检查会话活跃状态
+               2. 统计会话指标数据
+               3. 发送异常会话告警
+           - getSessionStatistics(): 获取会话统计信息
+             - 逻辑:
+               1. 统计在线会话数
+               2. 统计活跃用户数
+               3. 生成会话分析报告
+
+       - SessionCleanupService: 会话清理服务,清理过期会话
+         - 方法:
+           - cleanupExpiredSessions(): 清理过期会话
+             - 逻辑:
+               1. 扫描过期会话
+               2. 清理会话数据
+               3. 更新用户状态
+           - cleanupInactiveSessions(): 清理不活跃会话
+             - 逻辑:
+               1. 检查会话最后访问时间
+               2. 清理超时会话
+               3. 记录清理日志
+
+       - RedisSessionRepository: Redis会话存储,管理会话持久化
+         - 方法:
+           - save(Session session): 保存会话
+             - 逻辑:
+               1. 序列化会话数据
+               2. 设置过期时间
+               3. 保存到Redis
+           - findById(String id): 查找会话
+             - 逻辑:
+               1. 从Redis读取数据
+               2. 反序列化会话对象
+               3. 更新访问时间
      - 实现方案:
        - JWT或Session实现会话管理
        - Redis存储会话状态
        - 支持会话并发控制
        - 实时监控会话状态
        - 定期清理过期会话
-   - 安全防护
+   - 2.2.3.1.3 安全防护
+     - 时序图
      - 核心类:
+       ```mermaid
+       sequenceDiagram
+           participant C as Client
+           participant AC as AuditController
+           participant AS as SecurityAuditService
+           participant LS as LoginLogService
+           participant BP as BruteForceProtector
+           participant AD as AbnormalLoginDetector
+           participant EP as SecurityEventPublisher
+           participant AL as SecurityAlertService
+           participant DB as Database
+           
+           C->>AC: 安全相关操作
+           AC->>AS: recordAuditEvent()
+           AS->>DB: 保存审计记录
+           AS->>EP: publishSecurityEvent()
+           
+           alt 登录操作
+               AC->>LS: recordLoginLog()
+               LS->>BP: checkLoginAttempts()
+               BP-->>LS: 返回检查结果
+               
+               alt 发现异常
+                   BP->>AD: detectAbnormalLogin()
+                   AD->>AL: evaluateSecurityAlert()
+                   AL->>AL: notifySecurityTeam()
+               end
+           end
+           
+           EP->>AL: 处理安全事件
+           AL-->>C: 返回处理结果
+       ```
+
        - SecurityAuditEntity: 安全审计实体类,映射sys_security_audit表
-       - SecurityAuditRepository: 安全审计仓库
-       - SecurityAuditMapper: 安全审计Mapper接口
+         - 说明: 记录系统安全相关的审计事件
+         - 属性:
+           - id: 主键
+           - eventType: 事件类型(登录/注销/操作等)
+           - eventTime: 事件时间
+           - userId: 用户ID
+           - ipAddress: IP地址
+           - eventDetails: 事件详情
+           - riskLevel: 风险等级
+
        - SecurityAuditService: 安全审计服务
-       - SecurityAuditController: 安全审计控制器
-       - LoginLogEntity: 登录日志实体类,映射sys_login_log表
-       - LoginLogRepository: 登录日志仓库
-       - LoginLogMapper: 登录日志Mapper接口
+         - 说明: 提供安全审计相关的业务逻辑处理
+         - 方法:
+           - recordAuditEvent(): 记录审计事件
+             - 逻辑:
+               1. 收集事件信息
+               2. 评估风险等级
+               3. 持久化审计记录
+               4. 触发安全告警
+           - queryAuditEvents(): 查询审计事件
+             - 逻辑:
+               1. 构建查询条件
+               2. 分页查询数据
+               3. 数据脱敏处理
+
        - LoginLogService: 登录日志服务
-       - LoginLogController: 登录日志控制器
-       - OperationLogEntity: 操作日志实体类,映射sys_operation_log表
-       - OperationLogRepository: 操作日志仓库
-       - OperationLogMapper: 操作日志Mapper接口
-       - OperationLogService: 操作日志服务
-       - OperationLogController: 操作日志控制器
-       - SecurityAuditLogger: 安全审计日志
+         - 说明: 处理用户登录相关的日志记录
+         - 方法:
+           - recordLoginLog(): 记录登录日志
+             - 逻辑:
+               1. 收集登录信息
+               2. 记录登录结果
+               3. 分析登录行为
+           - analyzeLoginPattern(): 分析登录模式
+             - 逻辑:
+               1. 统计登录频率
+               2. 检测异常时段
+               3. 识别异常位置
+
        - BruteForceProtector: 暴力破解防护
+         - 说明: 防止暴力破解攻击
+         - 方法:
+           - checkLoginAttempts(): 检查登录尝试
+             - 逻辑:
+               1. 统计失败次数
+               2. 实施临时封禁
+               3. 记录防护日志
+           - updateBlockStatus(): 更新封禁状态
+             - 逻辑:
+               1. 检查封禁时间
+               2. 自动解除封禁
+               3. 通知安全告警
+
        - AbnormalLoginDetector: 异常登录检测
+         - 说明: 检测异常登录行为
+         - 方法:
+           - detectAbnormalLogin(): 检测异常登录
+             - 逻辑:
+               1. 分析登录位置
+               2. 检查登录时间
+               3. 评估行为风险
+           - handleAbnormalLogin(): 处理异常登录
+             - 逻辑:
+               1. 发送安全提醒
+               2. 要求二次验证
+               3. 记录异常事件
+
        - SecurityEventPublisher: 安全事件发布器
+         - 说明: 发布安全相关事件
+         - 方法:
+           - publishSecurityEvent(): 发布安全事件
+             - 逻辑:
+               1. 构建事件消息
+               2. 异步发布事件
+               3. 确保消息送达
+           - handleEventFailure(): 处理事件失败
+             - 逻辑:
+               1. 重试发送事件
+               2. 记录失败日志
+               3. 触发告警通知
+
        - SecurityAlertService: 安全告警服务
+         - 说明: 处理安全告警
+         - 方法:
+           - evaluateSecurityAlert(): 评估安全告警
+             - 逻辑:
+               1. 分析告警级别
+               2. 确定处理策略
+               3. 执行告警动作
+           - notifySecurityTeam(): 通知安全团队
+             - 逻辑:
+               1. 生成告警通知
+               2. 选择通知渠道
+               3. 跟踪处理状态
      - 实现方案:
        - 完整的安全审计日志
        - 多维度的攻击防护
        - 异常行为实时检测
        - 安全事件实时通知
        - 支持自定义告警规则
-   - 用户体验
-     - 核心类:
-       - MessageSource: 国际化消息源
-       - CaptchaService: 验证码服务
-       - PasswordResetService: 密码重置服务
-       - UserPreferenceService: 用户偏好服务
-       - NotificationService: 通知服务
-       - RateLimiter: 限流器
-       - CircuitBreaker: 熔断器
-       - LoadBalancer: 负载均衡器
-       - RetryTemplate: 重试模板
-     - 实现方案:
-       - 基于Spring国际化支持
-       - 多种验证码生成方案
-       - 标准的密码重置流程
-       - 个性化配置持久化
-       - 多渠道消息通知
-       - 限流熔断保护
-       - 负载均衡分发
-       - 失败请求重试
-###### 2.2.3.2 数据模型设计
-
-1. 用户认证相关表
-   - sys_user_third: 第三方用户关联表
-     - id: bigint(20) 主键
-     - user_id: bigint(20) 用户ID
-     - third_type: varchar(20) 第三方类型(WECHAT/DINGTALK)
-     - third_id: varchar(100) 第三方用户ID
-     - third_data: text 第三方用户数据
-     - bind_time: datetime 绑定时间
+   - 2.2.3.1.4 用户体验
+     - 时序图
+       ```mermaid
+       sequenceDiagram
+         participant User as 用户
+         participant CS as CaptchaService
+         participant PRS as PasswordResetService
+         participant Email as EmailService
+         participant DB as 数据库
+         
+         %% 验证码流程
+         User->>CS: 请求验证码
+         activate CS
+         CS->>CS: generateCaptcha()
+         CS->>DB: 保存验证码
+         CS-->>User: 返回验证码
+         deactivate CS
+         
+         User->>CS: 提交验证码
+         activate CS
+         CS->>DB: 获取验证码
+         CS->>CS: validateCaptcha()
+         CS-->>User: 验证结果
+         deactivate CS
+         
+         %% 密码重置流程
+         User->>PRS: 发起密码重置
+         activate PRS
+         PRS->>PRS: initiateReset()
+         PRS->>Email: 发送重置链接
+         PRS->>DB: 保存重置令牌
+         PRS-->>User: 重置链接已发送
+         deactivate PRS
+         
+         User->>PRS: 访问重置链接
+         activate PRS
+         PRS->>PRS: validateResetToken()
+         PRS-->>User: 显示重置页面
+         deactivate PRS
+         
+         User->>PRS: 提交新密码
+         activate PRS
+         PRS->>PRS: resetPassword()
+         PRS->>DB: 更新密码
+         PRS->>Email: 发送通知
+         PRS-->>User: 重置成功
+         deactivate PRS
+       ```
      
-   - sys_user_password_history: 密码历史表
-     - id: bigint(20) 主键
-     - user_id: bigint(20) 用户ID 
-     - password: varchar(100) 历史密码
-     - create_time: datetime 创建时间
+     - 核心类:
+       - CaptchaService: 验证码服务
+         - 说明: 提供验证码生成、验证等功能
+         - 方法:
+           - generateCaptcha(): 生成验证码
+             - 逻辑:
+               1. 根据配置选择验证码类型(图片/短信/邮件)
+               2. 生成随机验证码
+               3. 保存验证码与过期时间
+               4. 返回验证码内容
+           - validateCaptcha(): 验证验证码
+             - 逻辑:
+               1. 获取保存的验证码
+               2. 检查是否过期
+               3. 比对验证码是否匹配
+               4. 验证成功后失效该验证码
+           - getCaptchaStatus(): 获取验证码状态
+             - 逻辑:
+               1. 检查验证码是否存在
+               2. 返回剩余有效时间
+               3. 返回验证次数等信息
 
+       - PasswordResetService: 密码重置服务
+         - 说明: 处理密码重置流程
+         - 方法:
+           - initiateReset(): 发起密码重置
+             - 逻辑:
+               1. 验证用户身份
+               2. 生成重置令牌
+               3. 发送重置链接
+               4. 记录重置请求
+           - validateResetToken(): 验证重置令牌
+             - 逻辑:
+               1. 检查令牌有效性
+               2. 验证令牌是否过期
+               3. 确认用户身份
+           - resetPassword(): 重置密码
+             - 逻辑:
+               1. 验证新密码强度
+               2. 检查密码历史
+               3. 更新密码
+               4. 清除重置令牌
+               5. 发送通知
+           - cancelReset(): 取消重置
+             - 逻辑:
+               1. 作废重置令牌
+               2. 清理相关记录
+               3. 发送取消通知
+     - 实现方案:
+       - 多种验证码生成方案
+         - 图形验证码
+         - 短信验证码
+         - 邮件验证码
+       - 标准的密码重置流程
+         - 身份验证
+         - 令牌管理
+         - 安全通知
 
-3. 安全审计相关表
-   - sys_login_log: 登录日志表
-     - id: bigint(20) 主键
-     - user_id: bigint(20) 用户ID
-     - login_type: varchar(20) 登录类型
-     - login_ip: varchar(50) 登录IP
-     - login_location: varchar(100) 登录地点
-     - browser: varchar(50) 浏览器
-     - os: varchar(50) 操作系统
-     - device_id: varchar(100) 设备ID
-     - status: tinyint(1) 状态(0-失败,1-成功)
-     - msg: varchar(255) 提示消息
-     - login_time: datetime 登录时间
+###### 2.2.3.2 数据模型设计
+- 数据库表设计
+  1. 用户认证相关表
+    - auth_user: 用户基本信息表 (主表)
+      | 字段 | 业务含义 | 长度 | 取值范围 | 计算规则 | 数据格式 | 是否必填 | 默认值 | 数据校验规则 | 数据关联关系 | 数据权限控制 | 数据生命周期 | 数据质量要求 | 数据安全等级 | 数据备份策略 | 数据审计要求 |
+      |------|----------|------|-----------|-----------|-----------|-----------|----------|--------------|---------------|---------------|---------------|---------------|---------------|---------------|---------------|
+      | id | 用户唯一标识 | 32 | - | UUID生成 | varchar | 是 | - | 符合UUID格式 | 主键 | 系统管理员可查看 | 永久保存 | 不可重复 | 高 | 实时备份 | 记录创建/修改 |
+      | tenant_id | 租户ID | 32 | - | - | varchar | 是 | - | 非空 | 关联租户表 | 租户管理员可查看 | 永久保存 | 必须存在 | 高 | 实时备份 | 记录变更 |
+      | username | 登录账号 | 50 | - | - | varchar | 是 | - | 字母数字组合 | - | 用户本人可见 | 永久保存 | 唯一 | 高 | 实时备份 | 记录变更 |
+      | password | 加密密码 | 100 | - | BCrypt加密 | varchar | 是 | - | 加密存储 | - | 不可见 | 永久保存 | 必须加密 | 高 | 实时备份 | 记录修改 |
+      | email | 邮箱地址 | 100 | - | - | varchar | 否 | null | 邮箱格式 | - | 用户本人可见 | 永久保存 | 格式正确 | 中 | 定期备份 | 记录变更 |
+      | phone | 手机号 | 20 | - | - | varchar | 否 | null | 手机号格式 | - | 用户本人可见 | 永久保存 | 格式正确 | 中 | 定期备份 | 记录变更 |
+      | status | 账号状态 | 1 | 0-1 | - | tinyint | 是 | 1 | 0或1 | - | 管理员可修改 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | mfa_enabled | 多因素认证开关 | 1 | 0-1 | - | tinyint | 是 | 0 | 0或1 | - | 用户可修改 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | mfa_secret | 多因素认证密钥 | 32 | - | 随机生成 | varchar | 否 | null | - | - | 不可见 | 永久保存 | 加密存储 | 高 | 实时备份 | 记录变更 |
+      | login_attempts | 登录尝试次数 | 11 | 0-N | 累加计数 | int | 是 | 0 | >=0 | - | 系统自动管理 | 24小时重置 | - | 中 | 定期备份 | 记录变更 |
+      | locked_until | 锁定截止时间 | - | - | - | datetime | 否 | null | - | - | 系统自动管理 | 自动失效 | - | 中 | 定期备份 | 记录变更 |
+      | last_login_time | 最后登录时间 | - | - | - | datetime | 否 | null | - | - | 系统自动更新 | 永久保存 | - | 低 | 定期备份 | 记录变更 |
+      | create_time | 创建时间 | - | - | - | datetime | 是 | CURRENT_TIMESTAMP | - | - | 系统自动生成 | 永久保存 | - | 低 | 定期备份 | 记录创建 |
+      | update_time | 更新时间 | - | - | - | datetime | 是 | CURRENT_TIMESTAMP | - | - | 系统自动更新 | 永久保存 | - | 低 | 定期备份 | 记录修改 |
 
-   - sys_operation_log: 操作日志表
-     - id: bigint(20) 主键
-     - user_id: bigint(20) 用户ID
-     - module: varchar(50) 操作模块
-     - operation: varchar(50) 操作类型
-     - method: varchar(100) 方法名
-     - params: text 请求参数
-     - time: bigint(20) 执行时长
-     - ip: varchar(50) 操作IP
-     - location: varchar(255) 操作地点
-     - status: int(1) 操作状态
-     - error_msg: text 错误消息
-     - create_time: datetime 创建时间
+    - auth_user_third: 第三方账号绑定表
+      | 字段 | 业务含义 | 长度 | 取值范围 | 计算规则 | 数据格式 | 是否必填 | 默认值 | 数据校验规则 | 数据关联关系 | 数据权限控制 | 数据生命周期 | 数据质量要求 | 数据安全等级 | 数据备份策略 | 数据审计要求 |
+      |------|----------|------|-----------|-----------|-----------|-----------|----------|--------------|---------------|---------------|---------------|---------------|---------------|---------------|---------------|
+      | id | 绑定记录标识 | 32 | - | UUID生成 | varchar | 是 | - | 符合UUID格式 | 主键 | 系统管理员可查看 | 永久保存 | 不可重复 | 高 | 实时备份 | 记录创建/修改 |
+      | user_id | 关联用户ID | 32 | - | - | varchar | 是 | - | 存在性校验 | 外键 | 用户本人可见 | 永久保存 | 必须存在 | 高 | 实时备份 | 记录变更 |
+      | third_type | 第三方平台类型 | 20 | 预定义类型 | - | varchar | 是 | - | 枚举值校验 | - | 用户本人可见 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | third_id | 第三方用户ID | 100 | - | - | varchar | 是 | - | 非空 | - | 用户本人可见 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | third_username | 第三方用户名 | 100 | - | - | varchar | 否 | null | - | - | 用户本人可见 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | third_email | 第三方邮箱 | 100 | - | - | varchar | 否 | null | 邮箱格式 | - | 用户本人可见 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | third_avatar | 头像URL | 255 | - | - | varchar | 否 | null | URL格式 | - | 用户本人可见 | 永久保存 | - | 低 | 定期备份 | 记录变更 |
+      | access_token | 访问令牌 | 255 | - | - | varchar | 是 | - | 非空 | - | 不可见 | 过期失效 | 加密存储 | 高 | 实时备份 | 记录变更 |
+      | refresh_token | 刷新令牌 | 255 | - | - | varchar | 否 | null | - | - | 不可见 | 过期失效 | 加密存储 | 高 | 实时备份 | 记录变更 |
+      | token_expires | 令牌过期时间 | - | - | - | datetime | 是 | - | - | - | 系统自动管理 | 自动失效 | - | 中 | 定期备份 | 记录变更 |
+      | bind_time | 绑定时间 | - | - | - | datetime | 是 | CURRENT_TIMESTAMP | - | - | 系统自动生成 | 永久保存 | - | 低 | 定期备份 | 记录创建 |
+      | unbind_time | 解绑时间 | - | - | - | datetime | 否 | null | - | - | 系统自动更新 | 永久保存 | - | 低 | 定期备份 | 记录修改 |
+      | status | 绑定状态 | 1 | 0-1 | - | tinyint | 是 | 1 | 0或1 | - | 系统自动管理 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
 
-   - sys_security_audit: 安全审计表
-     - id: bigint(20) 主键
-     - user_id: bigint(20) 用户ID
-     - event_type: varchar(50) 事件类型
-     - event_time: datetime 事件时间
-     - ip: varchar(50) IP地址
-     - details: text 详细信息
-     - risk_level: tinyint(1) 风险等级
+    - auth_user_password_history: 密码历史记录表
+      | 字段 | 业务含义 | 长度 | 取值范围 | 计算规则 | 数据格式 | 是否必填 | 默认值 | 数据校验规则 | 数据关联关系 | 数据权限控制 | 数据生命周期 | 数据质量要求 | 数据安全等级 | 数据备份策略 | 数据审计要求 |
+      |------|----------|------|-----------|-----------|-----------|-----------|----------|--------------|---------------|---------------|---------------|---------------|---------------|---------------|---------------|
+      | id | 历史记录标识 | 32 | - | UUID生成 | varchar | 是 | - | 符合UUID格式 | 主键 | 系统管理员可查看 | 永久保存 | 不可重复 | 高 | 实时备份 | 记录创建/修改 |
+      | user_id | 用户ID | 32 | - | - | varchar | 是 | - | 存在性校验 | 外键 | 系统管理员可查看 | 永久保存 | 必须存在 | 高 | 实时备份 | 记录变更 |
+      | password | 历史密码 | 100 | - | BCrypt加密 | varchar | 是 | - | 加密存储 | - | 不可见 | 永久保存 | 必须加密 | 高 | 实时备份 | 记录变更 |
+      | password_type | 密码类型 | 20 | 预定义类型 | - | varchar | 是 | - | 枚举值校验 | - | 系统管理员可查看 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | create_time | 创建时间 | - | - | - | datetime | 是 | CURRENT_TIMESTAMP | - | - | 系统自动生成 | 永久保存 | - | 低 | 定期备份 | 记录创建 |
+      | create_ip | 修改IP | 50 | - | - | varchar | 是 | - | IP格式 | - | 系统自动记录 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | create_location | 修改地点 | 100 | - | IP解析 | varchar | 否 | null | - | - | 系统自动记录 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
 
-4. 会话管理相关表
-   - sys_user_token: 用户令牌表
-     - id: bigint(20) 主键
-     - user_id: bigint(20) 用户ID
-     - token: varchar(255) 令牌值
-     - token_type: varchar(20) 令牌类型(JWT/Session)
-     - refresh_token: varchar(255) 刷新令牌
-     - device_type: varchar(20) 设备类型
-     - expire_time: datetime 过期时间
-     - create_time: datetime 创建时间
+  2. 会话管理相关表
+    - auth_user_token: 用户令牌表
+      | 字段 | 业务含义 | 长度 | 取值范围 | 计算规则 | 数据格式 | 是否必填 | 默认值 | 数据校验规则 | 数据关联关系 | 数据权限控制 | 数据生命周期 | 数据质量要求 | 数据安全等级 | 数据备份策略 | 数据审计要求 |
+      |------|----------|------|-----------|-----------|-----------|-----------|----------|--------------|---------------|---------------|---------------|---------------|---------------|---------------|---------------|
+      | id | 令牌标识 | 32 | - | UUID生成 | varchar | 是 | - | 符合UUID格式 | 主键 | 系统管理员可查看 | 永久保存 | 不可重复 | 高 | 实时备份 | 记录创建/修改 |
+      | user_id | 用户ID | 32 | - | - | varchar | 是 | - | 存在性校验 | 外键 | 用户本人可见 | 永久保存 | 必须存在 | 高 | 实时备份 | 记录变更 |
+      | token | 令牌值 | 255 | - | JWT生成 | varchar | 是 | - | JWT格式 | - | 不可见 | 过期失效 | 加密存储 | 高 | 实时备份 | 记录变更 |
+      | token_type | 令牌类型 | 20 | 预定义类型 | - | varchar | 是 | - | 枚举值校验 | - | 系统管理员可查看 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | refresh_token | 刷新令牌 | 255 | - | 随机生成 | varchar | 否 | null | - | - | 不可见 | 过期失效 | 加密存储 | 高 | 实时备份 | 记录变更 |
+      | device_type | 设备类型 | 20 | 预定义类型 | - | varchar | 是 | - | 枚举值校验 | - | 用户本人可见 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | device_id | 设备标识 | 100 | - | - | varchar | 是 | - | 非空 | - | 用户本人可见 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | expire_time | 过期时间 | - | - | - | datetime | 是 | - | - | - | 系统自动管理 | 自动失效 | - | 中 | 定期备份 | 记录变更 |
+      | create_time | 创建时间 | - | - | - | datetime | 是 | CURRENT_TIMESTAMP | - | - | 系统自动生成 | 永久保存 | - | 低 | 定期备份 | 记录创建 |
+      | status | 令牌状态 | 1 | 0-1 | - | tinyint | 是 | 1 | 0或1 | - | 系统自动管理 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
 
-   - sys_user_online: 在线用户表
-     - id: bigint(20) 主键
-     - user_id: bigint(20) 用户ID
-     - token_id: varchar(255) 令牌ID
-     - browser: varchar(50) 浏览器
-     - os: varchar(50) 操作系统
-     - device_id: varchar(100) 设备ID
-     - ip: varchar(50) 登录IP
-     - location: varchar(255) 登录地点
-     - start_time: datetime 登录时间
-     - last_access_time: datetime 最后访问时间
-     - expire_time: datetime 过期时间
+    - auth_user_online: 在线用户表
+      | 字段 | 业务含义 | 长度 | 取值范围 | 计算规则 | 数据格式 | 是否必填 | 默认值 | 数据校验规则 | 数据关联关系 | 数据权限控制 | 数据生命周期 | 数据质量要求 | 数据安全等级 | 数据备份策略 | 数据审计要求 |
+      |------|----------|------|-----------|-----------|-----------|-----------|----------|--------------|---------------|---------------|---------------|---------------|---------------|---------------|---------------|
+      | id | 在线记录标识 | 32 | - | UUID生成 | varchar | 是 | - | 符合UUID格式 | 主键 | 系统管理员可查看 | 永久保存 | 不可重复 | 高 | 实时备份 | 记录创建/修改 |
+      | user_id | 用户ID | 32 | - | - | varchar | 是 | - | 存在性校验 | 外键 | 用户本人可见 | 永久保存 | 必须存在 | 高 | 实时备份 | 记录变更 |
+      | token_id | 令牌ID | 32 | - | - | varchar | 是 | - | 存在性校验 | 外键 | 系统管理员可查看 | 永久保存 | 必须存在 | 高 | 实时备份 | 记录变更 |
+      | browser | 浏览器 | 50 | - | UA解析 | varchar | 否 | null | - | - | 用户本人可见 | 永久保存 | - | 低 | 定期备份 | 记录变更 |
+      | os | 操作系统 | 50 | - | UA解析 | varchar | 否 | null | - | - | 用户本人可见 | 永久保存 | - | 低 | 定期备份 | 记录变更 |
+      | device_id | 设备标识 | 100 | - | - | varchar | 是 | - | 非空 | - | 用户本人可见 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | ip | 登录IP | 50 | - | - | varchar | 是 | - | IP格式 | - | 用户本人可见 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | location | 登录地点 | 255 | - | IP解析 | varchar | 否 | null | - | - | 用户本人可见 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | start_time | 登录时间 | - | - | - | datetime | 是 | CURRENT_TIMESTAMP | - | - | 系统自动生成 | 永久保存 | - | 低 | 定期备份 | 记录创建 |
+      | last_access_time | 最后访问时间 | - | - | - | datetime | 是 | CURRENT_TIMESTAMP | - | - | 系统自动更新 | 永久保存 | - | 低 | 定期备份 | 记录修改 |
+      | expire_time | 过期时间 | - | - | - | datetime | 是 | - | - | - | 系统自动管理 | 自动失效 | - | 中 | 定期备份 | 记录变更 |
+      | status | 在线状态 | 1 | 0-1 | - | tinyint | 是 | 1 | 0或1 | - | 系统自动管理 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
 
-   - sys_user_device: 用户设备表
-     - id: bigint(20) 主键
-     - user_id: bigint(20) 用户ID
-     - device_id: varchar(100) 设备ID
-     - device_type: varchar(20) 设备类型
-     - device_name: varchar(100) 设备名称
-     - last_login_time: datetime 最后登录时间
-     - is_trusted: tinyint(1) 是否受信任设备
-     - status: tinyint(1) 状态
+  3. 安全审计相关表
+    - auth_login_log: 登录日志表
+      | 字段 | 业务含义 | 长度 | 取值范围 | 计算规则 | 数据格式 | 是否必填 | 默认值 | 数据校验规则 | 数据关联关系 | 数据权限控制 | 数据生命周期 | 数据质量要求 | 数据安全等级 | 数据备份策略 | 数据审计要求 |
+      |------|----------|------|-----------|-----------|-----------|-----------|----------|--------------|---------------|---------------|---------------|---------------|---------------|---------------|---------------|
+      | id | 日志标识 | 32 | - | UUID生成 | varchar | 是 | - | 符合UUID格式 | 主键 | 系统管理员可查看 | 永久保存 | 不可重复 | 高 | 实时备份 | 记录创建/修改 |
+      | user_id | 用户ID | 32 | - | - | varchar | 是 | - | 存在性校验 | 外键 | 用户本人可见 | 永久保存 | 必须存在 | 高 | 实时备份 | 记录变更 |
+      | login_type | 登录类型 | 20 | 预定义类型 | - | varchar | 是 | - | 枚举值校验 | - | 系统管理员可查看 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | login_ip | 登录IP | 50 | - | - | varchar | 是 | - | IP格式 | - | 用户本人可见 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | login_location | 登录地点 | 100 | - | IP解析 | varchar | 否 | null | - | - | 用户本人可见 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | browser | 浏览器 | 50 | - | UA解析 | varchar | 否 | null | - | - | 用户本人可见 | 永久保存 | - | 低 | 定期备份 | 记录变更 |
+      | os | 操作系统 | 50 | - | UA解析 | varchar | 否 | null | - | - | 用户本人可见 | 永久保存 | - | 低 | 定期备份 | 记录变更 |
+      | device_id | 设备标识 | 100 | - | - | varchar | 是 | - | 非空 | - | 用户本人可见 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | status | 登录状态 | 1 | 0-1 | - | tinyint | 是 | - | 0或1 | - | 系统管理员可查看 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | msg | 提示消息 | 255 | - | - | varchar | 否 | null | - | - | 系统管理员可查看 | 永久保存 | - | 低 | 定期备份 | 记录变更 |
+      | login_time | 登录时间 | - | - | - | datetime | 是 | CURRENT_TIMESTAMP | - | - | 系统自动生成 | 永久保存 | - | 低 | 定期备份 | 记录创建 |
+
+    - auth_security_audit: 安全审计表
+      | 字段 | 业务含义 | 长度 | 取值范围 | 计算规则 | 数据格式 | 是否必填 | 默认值 | 数据校验规则 | 数据关联关系 | 数据权限控制 | 数据生命周期 | 数据质量要求 | 数据安全等级 | 数据备份策略 | 数据审计要求 |
+      |------|----------|------|-----------|-----------|-----------|-----------|----------|--------------|---------------|---------------|---------------|---------------|---------------|---------------|---------------|
+      | id | 审计记录标识 | 32 | - | UUID生成 | varchar | 是 | - | 符合UUID格式 | 主键 | 系统管理员可查看 | 永久保存 | 不可重复 | 高 | 实时备份 | 记录创建/修改 |
+      | user_id | 用户ID | 32 | - | - | varchar | 是 | - | 存在性校验 | 外键 | 系统管理员可查看 | 永久保存 | 必须存在 | 高 | 实时备份 | 记录变更 |
+      | event_type | 事件类型 | 50 | 预定义类型 | - | varchar | 是 | - | 枚举值校验 | - | 系统管理员可查看 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | event_time | 事件时间 | - | - | - | datetime | 是 | CURRENT_TIMESTAMP | - | - | 系统自动生成 | 永久保存 | - | 低 | 定期备份 | 记录创建 |
+      | ip | IP地址 | 50 | - | - | varchar | 是 | - | IP格式 | - | 系统管理员可查看 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | details | 详细信息 | - | - | - | text | 否 | null | - | - | 系统管理员可查看 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | risk_level | 风险等级 | 1 | 0-2 | - | tinyint | 是 | 0 | 0-2 | - | 系统管理员可查看 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | status | 处理状态 | 1 | 0-1 | - | tinyint | 是 | 0 | 0或1 | - | 系统管理员可查看 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+      | handle_time | 处理时间 | - | - | - | datetime | 否 | null | - | - | 系统管理员可查看 | 永久保存 | - | 低 | 定期备份 | 记录修改 |
+      | handle_user | 处理人ID | 32 | - | - | varchar | 否 | null | 存在性校验 | 外键 | 系统管理员可查看 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+  - 主键设计清单: 
+  1. 用户认证相关表
+    - auth_user (用户基本信息表)
+      - 主键类型: UUID
+      - 主键字段: id
+      - 选择理由: 
+        - 分布式环境下需要保证全局唯一性
+        - 用户数据可能需要跨系统迁移
+        - 避免自增ID暴露用户规模
+        - UUID可以保证隐私性和安全性
+
+    - auth_user_third (第三方账号绑定表)
+      - 主键类型: UUID 
+      - 主键字段: id
+      - 唯一约束: (user_id, third_type, third_id)
+      - 选择理由:
+        - 需要支持一个用户绑定多个第三方账号
+        - 复合唯一约束确保同一用户不会重复绑定同一平台账号
+
+    - auth_user_password_history (密码历史记录表)
+      - 主键类型: UUID
+      - 主键字段: id
+      - 选择理由:
+        - 历史记录表数据量大
+        - 需要支持分布式环境
+        - 便于数据备份和恢复
+
+  2. 会话管理相关表
+    - auth_user_token (用户令牌表)
+      - 主键类型: UUID
+      - 主键字段: id
+      - 唯一约束: token
+      - 选择理由:
+        - 令牌需要全局唯一
+        - 支持一个用户多设备登录
+        - 便于令牌的失效和刷新
+
+    - auth_user_online (在线用户表)
+      - 主键类型: UUID
+      - 主键字段: id
+      - 唯一约束: (user_id, device_id)
+      - 选择理由:
+        - 支持用户多设备同时在线
+        - 需要实时更新在线状态
+        - 便于会话管理和统计
+
+  3. 安全审计相关表
+    - auth_login_log (登录日志表)
+      - 主键类型: UUID
+      - 主键字段: id
+      - 选择理由:
+        - 日志数据量大
+        - 分布式环境下需要保证唯一性
+        - 便于日志收集和分析
+
+    - auth_security_audit (安全审计表)
+      - 主键类型: UUID
+      - 主键字段: id
+      - 选择理由:
+        - 审计数据量大
+        - 需要支持分布式环境
+        - 便于数据分析和追溯
+
+主键设计总结:
+1. 所有表采用UUID作为主键,原因:
+   - 系统采用分布式架构
+   - 数据量大且需要支持横向扩展
+   - 需要考虑数据迁移和同步
+   - 避免自增ID暴露业务信息
+   
+2. 部分表增加了复合唯一约束:
+   - auth_user_third: (user_id, third_type, third_id)
+   - auth_user_online: (user_id, device_id)
+   用于确保业务唯一性
+
+3. 所有主键字段统一命名为id,便于开发和维护
 
 ###### 2.2.3.3 测试用例设计
 1. 登录认证测试
