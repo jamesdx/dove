@@ -712,6 +712,280 @@ graph TD
 ```
 
 
+
+## 需求
+### 5.1 功能需求
+
+#### 5.1.1 网关服务
+
+##### 5.1.1.1 业务需求
+  - 1. 模块职责
+   - 路由转发
+     - 基于路径的动态路由配置
+     - 服务发现与注册中心集成
+     - 智能负载均衡策略
+     - 灰度发布与版本控制
+     - 请求重试与故障转移
+   - 统一认证鉴权
+     - Token统一校验
+     - 权限规则统一管理
+     - 认证结果缓存
+     - 认证服务对接集成
+   - 安全防护
+     - 黑白名单动态配置
+     - XSS/SQL注入防护
+     - 请求报文加解密
+     - 防重放攻击
+   - 流量治理
+     - 分布式限流
+     - 熔断降级策略
+     - 流量监控与统计
+     - 流量染色与追踪
+   - 统一日志
+     - 访问日志记录
+     - 错误日志采集
+     - 性能指标统计
+     - 链路追踪集成
+
+- 2. 核心流程
+   ```mermaid
+   sequenceDiagram
+       participant C as Client
+       participant G as Gateway
+       participant F as Filter Chain
+       participant S as Service
+       
+       C->>G: HTTP Request
+       G->>F: 进入过滤器链
+       F->>F: 1. 请求解析
+       F->>F: 2. 认证鉴权
+       F->>F: 3. 限流熔断
+       F->>F: 4. 路由转发
+       F->>S: 5. 调用服务
+       S-->>G: Service Response
+       G-->>C: HTTP Response
+   ```
+#### 5.1.2 认证服务
+
+2.2.2.1.1 模块职责描述
+   - 用户认证与授权管理
+     - 账号密码登录
+       - 支持用户名/邮箱/手机号登录
+       - 密码加密存储(BCrypt)
+       - 防暴力破解(错误次数限制)
+       - Remember Me 14天免登录
+     - OAuth2/SSO集成
+       - 支持OAuth2标准协议
+       - 对接企业内部SSO系统
+       - 支持多种授权模式
+     - 双因素认证(2FA)
+       - 支持Google Authenticator
+       - 支持短信验证码
+       - 支持邮箱验证码
+     - 第三方登录
+       - 支持企业微信登录
+       - 支持钉钉扫码登录
+       - 支持自定义第三方登录
+   - 会话管理
+     - Token签发与验证
+     - 会话状态维护
+     - 单点登录支持
+     - Remember Me功能
+   - 安全防护
+     - 密码加密存储
+     - 防暴力破解
+     - 登录日志审计
+     - 异常行为检测
+   - 用户体验
+     - 多语言支持
+     - 验证码服务
+     - 密码重置流程
+     - 登录状态保持
+  - 3.1.2 核心流程
+    ```mermaid
+    sequenceDiagram
+        participant C as Client
+        participant G as Gateway
+        participant A as Auth Service
+        participant U as User Service
+        participant R as Redis
+        
+        C->>G: 登录请求
+        G->>A: 转发认证
+        A->>U: 获取用户信息
+        U-->>A: 返回用户数据
+        A->>A: 验证密码
+        A->>R: 存储会话
+        A-->>G: 返回Token
+        G-->>C: 登录成功
+    ``` 
+  #### 5.1.3 用户服务 dove-user 
+    模块职责
+    - 用户信息管理
+    - 用户偏好设置
+    - 权限管理
+    - 用户数据同步
+
+  - 核心流程
+    ```mermaid
+    sequenceDiagram
+        participant C as Client
+        participant G as Gateway
+        participant U as User Service
+        participant DB as Database
+        participant Cache as Redis
+        
+        C->>G: 获取用户信息
+        G->>U: 转发请求
+        U->>Cache: 查询缓存
+        alt 缓存命中
+            Cache-->>U: 返回数据
+        else 缓存未命中
+            U->>DB: 查询数据库
+            DB-->>U: 返回数据
+            U->>Cache: 更新缓存
+        end
+        U-->>G: 返回用户信息
+        G-->>C: 响应
+    ``` 
+
+
+
+### 5.1 功能需求
+
+#### 5.1.1 网关服务
+
+##### 5.1.1.1 业务需求
+  - 1. 模块职责
+   - 路由转发
+     - 基于路径的动态路由配置
+     - 服务发现与注册中心集成
+     - 智能负载均衡策略
+     - 灰度发布与版本控制
+     - 请求重试与故障转移
+   - 统一认证鉴权
+     - Token统一校验
+     - 权限规则统一管理
+     - 认证结果缓存
+     - 认证服务对接集成
+   - 安全防护
+     - 黑白名单动态配置
+     - XSS/SQL注入防护
+     - 请求报文加解密
+     - 防重放攻击
+   - 流量治理
+     - 分布式限流
+     - 熔断降级策略
+     - 流量监控与统计
+     - 流量染色与追踪
+   - 统一日志
+     - 访问日志记录
+     - 错误日志采集
+     - 性能指标统计
+     - 链路追踪集成
+
+- 2. 核心流程
+   ```mermaid
+   sequenceDiagram
+       participant C as Client
+       participant G as Gateway
+       participant F as Filter Chain
+       participant S as Service
+       
+       C->>G: HTTP Request
+       G->>F: 进入过滤器链
+       F->>F: 1. 请求解析
+       F->>F: 2. 认证鉴权
+       F->>F: 3. 限流熔断
+       F->>F: 4. 路由转发
+       F->>S: 5. 调用服务
+       S-->>G: Service Response
+       G-->>C: HTTP Response
+   ```
+#### 5.1.2 认证服务
+
+2.2.2.1.1 模块职责描述
+   - 用户认证与授权管理
+     - 账号密码登录
+       - 支持用户名/邮箱/手机号登录
+       - 密码加密存储(BCrypt)
+       - 防暴力破解(错误次数限制)
+       - Remember Me 14天免登录
+     - OAuth2/SSO集成
+       - 支持OAuth2标准协议
+       - 对接企业内部SSO系统
+       - 支持多种授权模式
+     - 双因素认证(2FA)
+       - 支持Google Authenticator
+       - 支持短信验证码
+       - 支持邮箱验证码
+     - 第三方登录
+       - 支持企业微信登录
+       - 支持钉钉扫码登录
+       - 支持自定义第三方登录
+   - 会话管理
+     - Token签发与验证
+     - 会话状态维护
+     - 单点登录支持
+     - Remember Me功能
+   - 安全防护
+     - 密码加密存储
+     - 防暴力破解
+     - 登录日志审计
+     - 异常行为检测
+   - 用户体验
+     - 多语言支持
+     - 验证码服务
+     - 密码重置流程
+     - 登录状态保持
+  - 3.1.2 核心流程
+    ```mermaid
+    sequenceDiagram
+        participant C as Client
+        participant G as Gateway
+        participant A as Auth Service
+        participant U as User Service
+        participant R as Redis
+        
+        C->>G: 登录请求
+        G->>A: 转发认证
+        A->>U: 获取用户信息
+        U-->>A: 返回用户数据
+        A->>A: 验证密码
+        A->>R: 存储会话
+        A-->>G: 返回Token
+        G-->>C: 登录成功
+    ``` 
+  #### 5.1.3 用户服务 dove-user 
+    模块职责
+    - 用户信息管理
+    - 用户偏好设置
+    - 权限管理
+    - 用户数据同步
+
+  - 核心流程
+    ```mermaid
+    sequenceDiagram
+        participant C as Client
+        participant G as Gateway
+        participant U as User Service
+        participant DB as Database
+        participant Cache as Redis
+        
+        C->>G: 获取用户信息
+        G->>U: 转发请求
+        U->>Cache: 查询缓存
+        alt 缓存命中
+            Cache-->>U: 返回数据
+        else 缓存未命中
+            U->>DB: 查询数据库
+            DB-->>U: 返回数据
+            U->>Cache: 更新缓存
+        end
+        U-->>G: 返回用户信息
+        G-->>C: 响应
+    ``` 
+
 #### 2.1 dove-common  
 ##### 2.1.0 核心要求
 - dove-common 是 dove-parent  的子模块， 但是独立的文件夹和git 仓库
@@ -1068,13 +1342,17 @@ graph TD
     │   │   │   └── com.dove.auth
     │   │   │       ├── api                    # 对外接口
     │   │   │       │   ├── dto               # 数据传输对象
-    │   │   │       │   │   ├── LoginRequest.java      # 登录请求DTO
-    │   │   │       │   │   └── LoginResponse.java     # 登录响应DTO  
+    │   │   │       │   │   ├── request      # 请求DTO
+    │   │   │       │   │   │   └── LoginRequest.java  # 登录请求DTO
+    │   │   │       │   │   └── response     # 响应DTO
+    │   │   │       │   │       └── LoginResponse.java # 登录响应DTO
     │   │   │       │   └── facade            # 外观接口
     │   │   │       │       └── AuthFacade.java        # 认证服务外观接口
     │   │   │       ├── config                # 配置类
     │   │   │       │   ├── oauth2           # OAuth2配置
     │   │   │       │   │   ├── OAuth2Config.java      # OAuth2主配置
+    │   │   │       │   │   ├── OAuth2LoginConfigurer.java # OAuth2登录配置器
+    │   │   │       │   │   ├── OAuth2ClientRepository.java # OAuth2客户端配置仓库
     │   │   │       │   │   └── OAuth2Properties.java  # OAuth2配置属性
     │   │   │       │   ├── security         # 安全配置
     │   │   │       │   │   ├── SecurityConfig.java    # 安全主配置
@@ -1087,72 +1365,101 @@ graph TD
     │   │   │       ├── controller           # 控制器
     │   │   │       │   ├── login           # 登录相关
     │   │   │       │   │   ├── LoginController.java   # 登录控制器
+    │   │   │       │   │   ├── ThirdPartyUserController.java # 第三方用户控制器
     │   │   │       │   │   └── LogoutController.java  # 登出控制器
     │   │   │       │   ├── oauth           # OAuth相关
     │   │   │       │   │   └── OAuth2Controller.java  # OAuth2控制器
+    │   │   │       │   ├── log            # 日志相关
+    │   │   │       │   │   ├── SecurityAuditController.java # 安全审计控制器
+    │   │   │       │   │   ├── LoginLogController.java     # 登录日志控制器
+    │   │   │       │   │   └── OperationLogController.java # 操作日志控制器
     │   │   │       │   └── session         # 会话相关
     │   │   │       │       └── SessionController.java # 会话控制器
     │   │   │       ├── core                 # 核心模块
     │   │   │       │   ├── auth            # 认证核心
+    │   │   │       │   │   ├── provider    # 认证提供者
+    │   │   │       │   │   │   ├── TwoFactorAuthenticationProvider.java # 双因素认证提供者
+    │   │   │       │   │   │   └── ThirdPartyAuthenticationProvider.java # 第三方认证提供者
+    │   │   │       │   │   ├── service     # 认证服务
+    │   │   │       │   │   │   ├── GoogleAuthenticator.java # Google验证器
+    │   │   │       │   │   │   ├── SmsCodeService.java      # 短信验证码服务
+    │   │   │       │   │   │   └── EmailCodeService.java    # 邮箱验证码服务
     │   │   │       │   │   ├── AuthenticationManager.java # 认证管理器
     │   │   │       │   │   └── AuthorizationManager.java  # 授权管理器
     │   │   │       │   ├── session         # 会话核心
-    │   │   │       │   │   └── SessionManager.java    # 会话管理器
-    │   │   │       │   └── token           # Token处理
-    │   │   │       │       ├── JwtTokenGenerator.java # JWT生成器
-    │   │   │       │       └── TokenValidator.java    # Token验证器
+    │   │   │       │   │   ├── TokenService.java      # Token服务
+    │   │   │       │   │   ├── SessionRegistry.java   # 会话注册表
+    │   │   │       │   │   ├── SessionMonitor.java    # 会话监控器
+    │   │   │       │   │   ├── SessionCleanupService.java # 会话清理服务
+    │   │   │       │   │   └── RedisSessionRepository.java # Redis会话存储
+    │   │   │       │   └── security        # 安全核心
+    │   │   │       │       ├── BruteForceProtector.java # 暴力破解防护
+    │   │   │       │       ├── AbnormalLoginDetector.java # 异常登录检测
+    │   │   │       │       ├── SecurityEventPublisher.java # 安全事件发布器
+    │   │   │       │       └── SecurityAlertService.java # 安全告警服务
     │   │   │       ├── domain              # 领域模型
     │   │   │       │   ├── entity         # 实体类
-    │   │   │       │   │   ├── User.java           # 用户实体
-    │   │   │       │   │   └── LoginLog.java       # 登录日志实体
+    │   │   │       │   │   ├── ThirdPartyUserEntity.java # 第三方用户实体
+    │   │   │       │   │   ├── SecurityAuditEntity.java  # 安全审计实体
+    │   │   │       │   │   ├── LoginLogEntity.java      # 登录日志实体
+    │   │   │       │   │   └── OperationLogEntity.java  # 操作日志实体
     │   │   │       │   └── vo             # 值对象
     │   │   │       │       └── LoginVO.java         # 登录值对象
     │   │   │       ├── enums               # 枚举定义
     │   │   │       │   ├── LoginType.java          # 登录类型枚举
     │   │   │       │   └── LoginStatus.java        # 登录状态枚举
-    │   │   │       ├── exception           # 异常定义
-    │   │   │       │   ├── AuthException.java      # 认证异常
-    │   │   │       │   └── LoginException.java     # 登录异常
     │   │   │       ├── repository          # 数据访问层
-    │   │   │       │   ├── UserRepository.java     # 用户数据访问接口
-    │   │   │       │   └── LoginLogRepository.java # 登录日志数据访问接口
-    │   │   │       ├── security            # 安全相关
-    │   │   │       │   ├── filter         # 安全过滤器
-    │   │   │       │   │   ├── JwtAuthFilter.java  # JWT认证过滤器
-    │   │   │       │   │   └── LoginFilter.java    # 登录过滤器
-    │   │   │       │   └── handler        # 安全处理器
-    │   │   │       │       ├── LoginSuccessHandler.java  # 登录成功处理器
-    │   │   │       │       └── LoginFailureHandler.java  # 登录失败处理器
+    │   │   │       │   ├── ThirdPartyUserRepository.java # 第三方用户仓库
+    │   │   │       │   ├── SecurityAuditRepository.java  # 安全审计仓库
+    │   │   │       │   ├── LoginLogRepository.java      # 登录日志仓库
+    │   │   │       │   └── OperationLogRepository.java  # 操作日志仓库
     │   │   │       ├── service             # 业务服务
     │   │   │       │   ├── auth           # 认证服务
-    │   │   │       │   │   ├── AuthService.java         # 认证服务接口
-    │   │   │       │   │   └── AuthServiceImpl.java     # 认证服务实现
+    │   │   │       │   │   ├── TwoFactorConfigService.java # 2FA配置服务
+    │   │   │       │   │   ├── ThirdPartyConfigService.java # 第三方配置服务
+    │   │   │       │   │   ├── WeChatLoginService.java     # 企业微信登录服务
+    │   │   │       │   │   └── DingTalkLoginService.java   # 钉钉登录服务
     │   │   │       │   ├── oauth          # OAuth服务
-    │   │   │       │   │   ├── OAuth2Service.java       # OAuth2服务接口
-    │   │   │       │   │   └── OAuth2ServiceImpl.java   # OAuth2服务实现
+    │   │   │       │   │   ├── OAuth2UserService.java      # OAuth2用户服务
+    │   │   │       │   │   └── OAuth2TokenService.java     # OAuth2令牌服务
     │   │   │       │   └── user           # 用户服务
-    │   │   │       │       ├── UserService.java         # 用户服务接口
-    │   │   │       │       └── UserServiceImpl.java     # 用户服务实现
+    │   │   │       │       ├── UserPreferenceService.java  # 用户偏好服务
+    │   │   │       │       └── PasswordResetService.java   # 密码重置服务
     │   │   │       └── util                # 工具类
-    │   │   │           ├── PasswordEncoder.java    # 密码加密工具
-    │   │   │           └── TokenUtils.java         # Token工具类
+    │   │   │           ├── MessageSource.java        # 国际化消息源
+    │   │   │           ├── CaptchaService.java      # 验证码服务
+    │   │   │           ├── NotificationService.java # 通知服务
+    │   │   │           ├── RateLimiter.java        # 限流器
+    │   │   │           ├── CircuitBreaker.java     # 熔断器
+    │   │   │           ├── LoadBalancer.java       # 负载均衡器
+    │   │   │           └── RetryTemplate.java      # 重试模板
     │   │   └── resources
     │   │       ├── i18n                    # 国际化资源
     │   │       │   ├── messages_zh_CN.properties  # 中文资源
     │   │       │   └── messages_en_US.properties  # 英文资源
     │   │       ├── mapper                  # MyBatis映射
-    │   │       │   ├── UserMapper.xml            # 用户映射文件
-    │   │       │   └── LoginLogMapper.xml        # 登录日志映射文件
+    │   │       │   ├── ThirdPartyUserMapper.xml  # 第三方用户映射
+    │   │       │   ├── SecurityAuditMapper.xml   # 安全审计映射
+    │   │       │   ├── LoginLogMapper.xml        # 登录日志映射
+    │   │       │   └── OperationLogMapper.xml    # 操作日志映射
     │   │       └── application.yml         # 应用配置
     │   └── test                           # 测试代码
     │       └── java
     │           └── com.dove.auth
     │               ├── controller         # 控制器测试
     │               │   ├── LoginControllerTest.java    # 登录控制器测试
-    │               │   └── OAuth2ControllerTest.java   # OAuth2控制器测试
-    │               └── service           # 服务测试
-    │                   ├── AuthServiceTest.java        # 认证服务测试
-    │                   └── UserServiceTest.java        # 用户服务测试
+    │               │   └── AuthenticationServiceTest.java # 认证服务测试
+    │               ├── service           # 服务测试
+    │               │   ├── UserServiceClientTest.java  # 用户服务客户端测试
+    │               │   └── LoginTypeDetectorTest.java  # 登录类型检测器测试
+    │               ├── repository        # 仓库测试
+    │               │   └── UserRepositoryTest.java     # 用户仓库测试
+    │               ├── provider          # 提供者测试
+    │               │   └── AuthenticationProviderTest.java # 认证提供者测试
+    │               ├── enums            # 枚举测试
+    │               │   └── LoginTypeEnumTest.java      # 登录类型枚举测试
+    │               └── dto              # DTO测试
+    │                   └── LoginDTOTest.java           # 登录DTO测试
     └── pom.xml                          # 项目依赖
     ```
 ##### 2.2.2 需求描述
@@ -1241,19 +1548,298 @@ graph TD
    - 文档完善
 ##### 2.2.3 模块设计
 ###### 2.2.3.1 核心类设计
-   - 用户认证与授权管理 
+   - 2.2.3.1.1 用户认证与授权管理 
+    -  时序图
+     ```mermaid
+     sequenceDiagram
+      participant Client
+      participant LoginController
+      participant LoginTypeDetector
+      participant AuthenticationProvider
+      participant UserServiceClient
+      participant TokenGenerator
+      participant Redis
+
+      Client->>LoginController: 登录请求(标识符+密码)
+      LoginController->>LoginTypeDetector: 检测登录类型
+      LoginTypeDetector-->>LoginController: 返回登录类型(用户名/邮箱/手机)
+      LoginController->>AuthenticationProvider: 认证请求
+      AuthenticationProvider->>UserServiceClient: 获取用户信息
+      UserServiceClient-->>AuthenticationProvider: 返回用户数据
+      AuthenticationProvider->>AuthenticationProvider: 验证密码
+      AuthenticationProvider->>TokenGenerator: 生成Token
+      TokenGenerator->>Redis: 存储会话信息
+      TokenGenerator-->>AuthenticationProvider: 返回Token
+      AuthenticationProvider-->>LoginController: 认证成功
+      LoginController-->>Client: 返回Token
+     ```
      - 账号密码登录
        - 支持用户名/邮箱/手机号登录
          - 核心类:
+           - LoginController: 登录控制器,处理登录请求
+             - 方法:
+               - login(LoginRequest request): 处理登录请求
+                 - 逻辑:
+                   1. 参数校验
+                   2. 调用LoginTypeDetector检测登录类型
+                   3. 调用AuthenticationProvider进行认证
+                   4. 生成并返回token
+                   5. 记录登录日志
+               
+               - sendCode(String type, String target): 发送验证码
+                 - 逻辑:
+                   1. 校验发送类型和目标
+                   2. 生成验证码
+                   3. 根据类型调用不同发送服务
+                   4. 保存验证码到Redis
+                   5. 返回发送结果
+               
+               - verifyCode(String type, String target, String code): 验证验证码
+                 - 逻辑:
+                   1. 从Redis获取验证码
+                   2. 校验验证码是否正确
+                   3. 校验验证码是否过期
+                   4. 验证成功后删除验证码
+                   5. 返回验证结果
            - LoginTypeDetector: 登录类型检测器,通过正则表达式判断登录标识类型
-           - UserRepository: 用户数据访问接口,提供多字段查询方法
+             - 方法:
+               - detect(String identifier): LoginType
+                 - 逻辑:
+                   1. 判断是否为空
+                   2. 匹配用户名正则 ^[a-zA-Z][a-zA-Z0-9_]{4,15}$
+                   3. 匹配邮箱正则 ^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z0-9]{2,6}$
+                   4. 匹配手机号正则 ^1[3-9]\d{9}$
+                   5. 返回对应的LoginType枚举值
+                   6. 都不匹配则抛出异常
+
+               - isUsername(String identifier): boolean
+                 - 逻辑:
+                   1. 判断是否为空
+                   2. 匹配用户名正则表达式
+                   3. 返回匹配结果
+
+               - isEmail(String identifier): boolean  
+                 - 逻辑:
+                   1. 判断是否为空
+                   2. 匹配邮箱正则表达式
+                   3. 返回匹配结果
+
+               - isPhone(String identifier): boolean
+                 - 逻辑:
+                   1. 判断是否为空
+                   2. 匹配手机号正则表达式
+                   3. 返回匹配结果
+
+               - validateIdentifier(String identifier): void
+                 - 逻辑:
+                   1. 判断是否为空
+                   2. 判断长度是否合法
+                   3. 判断是否包含非法字符
+                   4. 不合法则抛出异常
+           - 用户服务调用
+            - 核心类:
+              - UserServiceClient: 用户服务Feign客户端,调用dove-user服务接口
+                - 方法:
+                  - getUserById(Long id): UserDTO
+                    - 逻辑:
+                      1. 参数校验
+                      2. 调用用户服务获取用户信息
+                      3. 转换为UserDTO返回
+                      4. 异常时触发降级处理
+                  
+                  - getUserByUsername(String username): UserDTO
+                    - 逻辑:
+                      1. 参数校验
+                      2. 调用用户服务根据用户名查询
+                      3. 转换为UserDTO返回
+                      4. 异常时触发降级处理
+                  
+                  - getUserByEmail(String email): UserDTO
+                    - 逻辑:
+                      1. 参数校验
+                      2. 调用用户服务根据邮箱查询
+                      3. 转换为UserDTO返回
+                      4. 异常时触发降级处理
+                  
+                  - getUserByPhone(String phone): UserDTO
+                    - 逻辑:
+                      1. 参数校验
+                      2. 调用用户服务根据手机号查询
+                      3. 转换为UserDTO返回
+                      4. 异常时触发降级处理
+
+              - UserServiceFallback: 用户服务降级处理
+                - 方法:
+                  - getUserById(Long id): UserDTO
+                    - 逻辑:
+                      1. 记录降级日志
+                      2. 从本地缓存获取
+                      3. 缓存不存在返回空对象
+                      4. 触发告警通知
+                  
+                  - getUserByUsername(String username): UserDTO 
+                    - 逻辑:
+                      1. 记录降级日志
+                      2. 从本地缓存获取
+                      3. 缓存不存在返回空对象
+                      4. 触发告警通知
+
+                  - getUserByEmail(String email): UserDTO
+                    - 逻辑:
+                      1. 记录降级日志
+                      2. 从本地缓存获取
+                      3. 缓存不存在返回空对象
+                      4. 触发告警通知
+
+                  - getUserByPhone(String phone): UserDTO
+                    - 逻辑:
+                      1. 记录降级日志
+                      2. 从本地缓存获取
+                      3. 缓存不存在返回空对象
+                      4. 触发告警通知
+
+              - UserDTO: 用户数据传输对象
+                - 属性:
+                  - id: Long - 用户ID
+                  - username: String - 用户名
+                  - email: String - 邮箱
+                  - phone: String - 手机号
+                  - status: Integer - 状态
+                  - createTime: LocalDateTime - 创建时间
+                  - updateTime: LocalDateTime - 更新时间
+                - 方法:
+                  - 标准getter/setter方法
+                  - toString(): String - 对象字符串表示
+                  - equals(Object o): boolean - 对象比较
+                  - hashCode(): int - 哈希值计算
+
+              - UserContext: 用户上下文,存储当前用户信息
+                - 方法:
+                  - setCurrentUser(UserDTO user): void
+                    - 逻辑:
+                      1. 参数校验
+                      2. 存储用户信息到ThreadLocal
+                      3. 更新最后访问时间
+                  
+                  - getCurrentUser(): UserDTO
+                    - 逻辑:
+                      1. 从ThreadLocal获取用户信息
+                      2. 用户不存在抛出异常
+                      3. 返回用户信息
+                  
+                  - clear(): void
+                    - 逻辑:
+                      1. 清除ThreadLocal中的用户信息
+                      2. 释放资源
+
+              - UserCacheManager: 用户缓存管理,本地缓存用户数据
+                - 方法:
+                  - getUser(String key): UserDTO
+                    - 逻辑:
+                      1. 从本地缓存获取
+                      2. 缓存不存在从Redis获取
+                      3. Redis不存在从数据库获取
+                      4. 更新本地缓存和Redis
+                  
+                  - putUser(String key, UserDTO user): void
+                    - 逻辑:
+                      1. 参数校验
+                      2. 更新本地缓存
+                      3. 更新Redis缓存
+                      4. 设置过期时间
+                  
+                  - removeUser(String key): void
+                    - 逻辑:
+                      1. 从本地缓存删除
+                      2. 从Redis删除
+                  
+                  - clearLocalCache(): void
+                    - 逻辑:
+                      1. 清空本地缓存
+                      2. 释放内存资源
+            - 实现方案:
+              - 通过Feign声明式调用dove-user服务
+              - 使用Hystrix实现服务降级
+              - Redis二级缓存减少调用压力
+              - 定时刷新本地缓存保证数据一致性
            - AuthenticationProvider: 认证提供者,实现多字段登录认证逻辑
+             - 方法:
+               - authenticate(LoginRequest request): LoginResponse
+                 - 逻辑:
+                   1. 参数校验
+                   2. 根据登录类型获取用户信息
+                   3. 验证密码是否正确
+                   4. 生成token
+                   5. 保存会话信息
+                   6. 返回登录响应
+               
+               - supports(LoginTypeEnum type): boolean
+                 - 逻辑:
+                   1. 判断是否支持该登录类型
+                   2. 返回是否支持结果
+
            - LoginTypeEnum: 登录类型枚举,定义支持的登录方式
+             - 枚举值:
+               - USERNAME: 用户名登录
+               - EMAIL: 邮箱登录 
+               - MOBILE: 手机号登录
+               - WEIXIN: 微信登录
+               - QQ: QQ登录
+
            - LoginRequest: 登录请求DTO,包含登录标识和密码等信息
+             - 属性:
+               - identifier: 登录标识(用户名/邮箱/手机号)
+               - password: 密码
+               - loginType: 登录类型
+               - rememberMe: 是否记住我
+               - deviceInfo: 设备信息
+
            - LoginResponse: 登录响应DTO,包含token和用户信息等
+             - 属性:
+               - token: 访问令牌
+               - refreshToken: 刷新令牌
+               - userInfo: 用户信息
+               - expireTime: 过期时间
+
            - GatewayAuthenticationFilter: 网关认证过滤器,处理登录请求转发
+             - 方法:
+               - filter(ServerWebExchange exchange): Mono<Void>
+                 - 逻辑:
+                   1. 判断是否为登录请求
+                   2. 提取登录信息
+                   3. 转发到认证服务
+                   4. 处理响应结果
+                   5. 设置跨域响应头
+
            - AuthenticationService: 认证服务,处理具体的认证逻辑
+             - 方法:
+               - login(LoginRequest request): LoginResponse
+                 - 逻辑:
+                   1. 获取认证提供者
+                   2. 执行认证流程
+                   3. 记录登录日志
+                   4. 返回认证结果
+               
+               - logout(String token): void
+                 - 逻辑:
+                   1. 清除会话信息
+                   2. 记录登出日志
+                   3. 清理用户缓存
+
            - TokenGenerator: Token生成器,生成JWT等token
+             - 方法:
+               - generateToken(UserDTO user): String
+                 - 逻辑:
+                   1. 构建JWT payload
+                   2. 设置过期时间
+                   3. 签名token
+                   4. 返回token字符串
+               
+               - parseToken(String token): Claims
+                 - 逻辑:
+                   1. 验证token签名
+                   2. 解析token内容
+                   3. 返回token声明
          - 实现方案:
            - GatewayAuthenticationFilter 拦截登录请求并转发到Auth Service
            - AuthenticationService 调用UserRepository获取用户信息
@@ -1264,10 +1850,105 @@ graph TD
        - 密码加密存储(BCrypt)
          - 核心类:
            - PasswordEncoder: 密码编码器接口
+             - 方法:
+               - encode(String rawPassword): String
+                 - 逻辑:
+                   1. 对原始密码进行加密
+                   2. 返回加密后的密文
+               - matches(String rawPassword, String encodedPassword): boolean
+                 - 逻辑:
+                   1. 验证原始密码与加密密码是否匹配
+                   2. 返回匹配结果
+
            - BCryptPasswordEncoder: BCrypt实现的密码编码器
+             - 方法:
+               - encode(String rawPassword): String
+                 - 逻辑:
+                   1. 生成随机盐值
+                   2. 使用BCrypt算法加密
+                   3. 返回加密后的密文
+               - matches(String rawPassword, String encodedPassword): boolean
+                 - 逻辑:
+                   1. 从encodedPassword中提取盐值
+                   2. 使用相同盐值加密rawPassword
+                   3. 比对加密结果是否一致
+
            - SecurityConfig: 安全配置类
-           - PasswordValidator: 密码校验器,检查密码强度
-           - PasswordHistoryService: 密码历史服务,防止重复使用旧密码
+             - 方法:
+               - passwordEncoder(): PasswordEncoder
+                 - 逻辑:
+                   1. 创建BCryptPasswordEncoder实例
+                   2. 配置加密强度
+                   3. 返回编码器实例
+               - configureGlobal(AuthenticationManagerBuilder auth)
+                 - 逻辑:
+                   1. 配置认证管理器
+                   2. 设置密码编码器
+                   3. 配置用户服务
+
+           - PasswordValidator: 密码校验器
+             - 方法:
+               - validate(String password): void
+                 - 逻辑:
+                   1. 检查密码长度
+                   2. 检查密码复杂度
+                   3. 检查是否包含特殊字符
+                   4. 不符合要求抛出异常
+               - checkStrength(String password): PasswordStrength
+                 - 逻辑:
+                   1. 计算密码强度分数
+                   2. 根据分数返回强度级别
+
+           - PasswordHistoryRepository: 密码历史仓库
+             - 方法:
+               - save(PasswordHistoryEntity entity): void
+                 - 逻辑:
+                   1. 保存密码历史记录
+               - findByUserId(Long userId): List<PasswordHistoryEntity>
+                 - 逻辑:
+                   1. 查询用户历史密码记录
+               - deleteExpiredHistory(Date expireTime): void
+                 - 逻辑:
+                   1. 删除过期的历史记录
+
+           - PasswordHistoryService: 密码历史服务
+             - 方法:
+               - addHistory(Long userId, String encodedPassword): void
+                 - 逻辑:
+                   1. 创建历史记录实体
+                   2. 保存到数据库
+               - checkPasswordReuse(Long userId, String newPassword): void
+                 - 逻辑:
+                   1. 获取历史密码记录
+                   2. 检查是否重复使用
+                   3. 重复使用则抛出异常
+               - cleanupHistory(): void
+                 - 逻辑:
+                   1. 计算过期时间
+                   2. 删除过期记录
+
+           - PasswordHistoryEntity: 密码历史实体类
+             - 属性:
+               - id: 主键
+               - userId: 用户ID
+               - password: 加密后的密码
+               - createTime: 创建时间
+
+           - PasswordHistoryMapper: 密码历史Mapper接口
+             - 方法:
+               - insert(PasswordHistoryEntity entity): void
+               - selectByUserId(Long userId): List<PasswordHistoryEntity>
+               - deleteByCreateTimeBefore(Date time): void
+
+           - PasswordHistoryController: 密码历史控制器
+             - 方法:
+               - changePassword(ChangePasswordRequest request): Result<Void>
+                 - 逻辑:
+                   1. 验证旧密码
+                   2. 校验新密码强度
+                   3. 检查密码重复使用
+                   4. 更新密码
+                   5. 记录历史
          - 实现方案:
            - 使用 BCryptPasswordEncoder 进行密码加密,强度可配置
            - 密码只存储密文,验证时使用 matches 方法比对
@@ -1276,10 +1957,84 @@ graph TD
        - 防暴力破解(错误次数限制)
          - 核心类:
            - LoginAttemptService: 登录尝试服务
+             - 方法:
+               - recordFailedAttempt(String username, String ip): void
+                 - 逻辑:
+                   1. 增加用户名和IP的失败计数
+                   2. 检查是否超过阈值
+                   3. 超过则调用IpBlockService封禁
+                   4. 记录安全审计日志
+               
+               - resetAttempts(String username): void
+                 - 逻辑:
+                   1. 清除用户的失败计数
+                   2. 记录登录成功日志
+               
+               - isBlocked(String username): boolean
+                 - 逻辑:
+                   1. 获取失败次数
+                   2. 判断是否超过阈值
+                   3. 返回是否被锁定
+
            - RedisTemplate: Redis操作模板
+             - 方法:
+               - increment(String key): Long
+                 - 逻辑:
+                   1. 原子递增计数
+                   2. 设置过期时间
+               
+               - delete(String key): void
+                 - 逻辑:
+                   1. 删除指定key
+               
+               - get(String key): Object
+                 - 逻辑:
+                   1. 获取key对应的值
+                   2. 返回结果
+
            - LoginFailureHandler: 登录失败处理器
+             - 方法:
+               - onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception): void
+                 - 逻辑:
+                   1. 获取用户名和IP
+                   2. 调用LoginAttemptService记录失败
+                   3. 返回失败响应
+                   4. 记录失败日志
+
            - IpBlockService: IP封禁服务
+             - 方法:
+               - blockIp(String ip, Duration duration): void
+                 - 逻辑:
+                   1. 将IP加入黑名单
+                   2. 设置封禁时长
+                   3. 记录封禁日志
+               
+               - unblockIp(String ip): void
+                 - 逻辑:
+                   1. 将IP从黑名单移除
+                   2. 记录解封日志
+               
+               - isIpBlocked(String ip): boolean
+                 - 逻辑:
+                   1. 检查IP是否在黑名单
+                   2. 返回是否被封禁
+
            - SecurityAuditLogger: 安全审计日志记录
+             - 方法:
+               - logLoginAttempt(String username, String ip, boolean success): void
+                 - 逻辑:
+                   1. 记录登录尝试信息
+                   2. 包含用户名、IP、时间等
+               
+               - logIpBlock(String ip, String reason): void
+                 - 逻辑:
+                   1. 记录IP封禁信息
+                   2. 包含IP、原因、时间等
+               
+               - logSecurityEvent(String event, Map<String,Object> details): void
+                 - 逻辑:
+                   1. 记录安全相关事件
+                   2. 保存详细信息
          - 实现方案:
            - Redis记录失败次数,key格式为 login:fail:{username}
            - 超过阈值锁定账号,登录成功则清除记录
@@ -1329,7 +2084,11 @@ graph TD
            - ThirdPartyAuthenticationProvider: 第三方认证提供者
            - WeChatLoginService: 企业微信登录服务
            - DingTalkLoginService: 钉钉登录服务
-           - ThirdPartyUserMapper: 第三方用户映射器
+           - ThirdPartyUserEntity: 第三方用户实体类,映射sys_user_third表
+           - ThirdPartyUserRepository: 第三方用户仓库
+           - ThirdPartyUserMapper: 第三方用户Mapper接口
+           - ThirdPartyUserService: 第三方用户服务
+           - ThirdPartyUserController: 第三方用户控制器
            - ThirdPartyConfigService: 第三方配置服务
        - 实现方案:
            - 实现第三方平台的OAuth流程
@@ -1353,6 +2112,21 @@ graph TD
        - 定期清理过期会话
    - 安全防护
      - 核心类:
+       - SecurityAuditEntity: 安全审计实体类,映射sys_security_audit表
+       - SecurityAuditRepository: 安全审计仓库
+       - SecurityAuditMapper: 安全审计Mapper接口
+       - SecurityAuditService: 安全审计服务
+       - SecurityAuditController: 安全审计控制器
+       - LoginLogEntity: 登录日志实体类,映射sys_login_log表
+       - LoginLogRepository: 登录日志仓库
+       - LoginLogMapper: 登录日志Mapper接口
+       - LoginLogService: 登录日志服务
+       - LoginLogController: 登录日志控制器
+       - OperationLogEntity: 操作日志实体类,映射sys_operation_log表
+       - OperationLogRepository: 操作日志仓库
+       - OperationLogMapper: 操作日志Mapper接口
+       - OperationLogService: 操作日志服务
+       - OperationLogController: 操作日志控制器
        - SecurityAuditLogger: 安全审计日志
        - BruteForceProtector: 暴力破解防护
        - AbnormalLoginDetector: 异常登录检测
@@ -1371,12 +2145,19 @@ graph TD
        - PasswordResetService: 密码重置服务
        - UserPreferenceService: 用户偏好服务
        - NotificationService: 通知服务
+       - RateLimiter: 限流器
+       - CircuitBreaker: 熔断器
+       - LoadBalancer: 负载均衡器
+       - RetryTemplate: 重试模板
      - 实现方案:
        - 基于Spring国际化支持
        - 多种验证码生成方案
        - 标准的密码重置流程
        - 个性化配置持久化
        - 多渠道消息通知
+       - 限流熔断保护
+       - 负载均衡分发
+       - 失败请求重试
 ###### 2.2.3.2 数据模型设计
 
 1. 用户认证相关表
@@ -1480,6 +2261,8 @@ graph TD
        - testLoginTypeDetection(): 测试登录类型检测
        - testPasswordStrengthValidation(): 测试密码强度校验
        - testPasswordHistory(): 测试密码历史记录
+       - testLoginWithRememberMe14Days(): 测试14天免登录功能
+       - testLoginWithDifferentLocales(): 测试多语言环境登录
      
      - AuthenticationServiceTest: 认证服务测试
        - testPasswordValidation(): 测试密码验证
@@ -1490,81 +2273,104 @@ graph TD
        - testIpBasedBlocking(): 测试IP封禁
        - testSecurityAuditLogging(): 测试安全审计日志
        - testDeviceInfoTracking(): 测试设备信息追踪
+       - testPasswordEncryption(): 测试BCrypt密码加密
+       - testPasswordStrengthValidation(): 测试密码强度校验
+       - testPasswordHistoryCheck(): 测试密码历史检查
 
-     - OAuth2LoginTest: OAuth2登录测试
-       - testOAuth2Flow(): 测试OAuth2流程
-       - testTokenExchange(): 测试令牌交换
-       - testUserInfoMapping(): 测试用户信息映射
-       - testClientValidation(): 测试客户端验证
-       - testDynamicClientConfig(): 测试动态客户端配置
-       - testTokenManagement(): 测试令牌管理
-
-2. 双因素认证测试
+2. 用户服务调用测试
    - 核心测试类:
-     - TwoFactorAuthTest: 2FA测试
-       - testGoogleAuthenticator(): 测试Google验证器
-       - testSmsVerification(): 测试短信验证
-       - testEmailVerification(): 测试邮箱验证
-       - testBackupCodes(): 测试备用码
-       - testSwitchAuthMethod(): 测试切换验证方式
-       - testForcedTwoFactor(): 测试强制2FA
-       - testTwoFactorConfig(): 测试2FA配置管理
+     - UserServiceClientTest: 用户服务客户端测试
+       - testFeignClientCall(): 测试Feign客户端调用
+       - testFallbackMechanism(): 测试服务降级机制
+       - testUserDTOMapping(): 测试用户DTO映射
+       - testUserContextManagement(): 测试用户上下文管理
+       - testLocalCacheOperation(): 测试本地缓存操作
+       - testRedisCacheOperation(): 测试Redis二级缓存
+       - testCacheRefreshMechanism(): 测试缓存刷新机制
 
-3. 第三方登录测试
+3. 登录类型检测测试
    - 核心测试类:
-     - ThirdPartyLoginTest: 第三方登录测试
-       - testWeChatLogin(): 测试企业微信登录
-       - testDingTalkLogin(): 测试钉钉登录
-       - testAccountBinding(): 测试账号绑定
-       - testAccountUnbinding(): 测试账号解绑
-       - testUserInfoMapping(): 测试用户信息映射
-       - testDynamicProviderConfig(): 测试动态提供商配置
-       - testCustomProvider(): 测试自定义登录提供商
+     - LoginTypeDetectorTest: 登录类型检测器测试
+       - testUsernameDetection(): 测试用户名格式检测
+       - testEmailDetection(): 测试邮箱格式检测
+       - testPhoneDetection(): 测试手机号格式检测
+       - testInvalidFormatDetection(): 测试无效格式检测
 
-4. 会话管理测试
+4. 用户数据访问测试
    - 核心测试类:
-     - SessionManagementTest: 会话管理测试
+     - UserRepositoryTest: 用户数据访问测试
+       - testFindByUsername(): 测试按用户名查询
+       - testFindByEmail(): 测试按邮箱查询
+       - testFindByPhone(): 测试按手机号查询
+       - testMultiFieldQuery(): 测试多字段组合查询
+
+5. 认证提供者测试
+   - 核心测试类:
+     - AuthenticationProviderTest: 认证提供者测试
+       - testMultiFieldAuthentication(): 测试多字段认证逻辑
+       - testAuthenticationFailure(): 测试认证失败处理
+       - testCustomAuthenticationLogic(): 测试自定义认证逻辑
+
+6. 登录类型枚举测试
+   - 核心测试类:
+     - LoginTypeEnumTest: 登录类型枚举测试
+       - testEnumValues(): 测试枚举值完整性
+       - testEnumConversion(): 测试枚举转换
+       - testInvalidEnumHandling(): 测试无效枚举处理
+
+7. 登录请求/响应DTO测试
+   - 核心测试类:
+     - LoginDTOTest: 登录DTO测试
+       - testLoginRequestValidation(): 测试登录请求验证
+       - testLoginResponseMapping(): 测试登录响应映射
+       - testDTOConversion(): 测试DTO转换
+
+8. 网关认证过滤器测试
+   - 核心测试类:
+     - GatewayAuthenticationFilterTest: 网关认证过滤器测试
+       - testRequestForwarding(): 测试请求转发
+       - testFilterChainExecution(): 测试过滤器链执行
+       - testAuthenticationFailureHandling(): 测试认证失败处理
+
+9. Token生成器测试
+   - 核心测试类:
+     - TokenGeneratorTest: Token生成器测试
+       - testJWTGeneration(): 测试JWT生成
        - testTokenValidation(): 测试Token验证
-       - testConcurrentSessions(): 测试并发会话
-       - testSessionExpiry(): 测试会话过期
-       - testSessionCleanup(): 测试会话清理
-       - testRedisSessionStorage(): 测试Redis会话存储
-       - testSessionMonitoring(): 测试会话监控
-       - testSessionRegistry(): 测试会话注册表
+       - testTokenRefresh(): 测试Token刷新
+       - testTokenRevocation(): 测试Token撤销
 
-5. 安全防护测试
-   - 核心测试类:
-     - SecurityProtectionTest: 安全防护测试
-       - testAuditLogging(): 测试审计日志
-       - testAbnormalLoginDetection(): 测试异常登录检测
-       - testSecurityAlerts(): 测试安全告警
-       - testCustomRules(): 测试自定义规则
-       - testMultiDimensionalProtection(): 测试多维度攻击防护
-       - testRealTimeDetection(): 测试实时检测
-       - testAlertNotification(): 测试告警通知
+10. 密码历史管理测试
+    - 核心测试类:
+      - PasswordHistoryTest: 密码历史测试
+        - testPasswordHistoryStorage(): 测试密码历史存储
+        - testPasswordHistoryValidation(): 测试密码历史验证
+        - testPasswordHistoryCleanup(): 测试密码历史清理
+        - testPasswordReuse(): 测试密码重用检查
 
-6. 用户体验测试
-   - 核心测试类:
-     - UserExperienceTest: 用户体验测试
-       - testI18nMessages(): 测试国际化消息
-       - testCaptchaValidation(): 测试验证码
-       - testPasswordReset(): 测试密码重置
-       - testUserPreferences(): 测试用户偏好
-       - testNotificationChannels(): 测试多渠道通知
-       - testPersonalizedConfig(): 测试个性化配置
-       - testMessageTemplates(): 测试消息模板
+11. 登录尝试服务测试
+    - 核心测试类:
+      - LoginAttemptServiceTest: 登录尝试服务测试
+        - testFailureTracking(): 测试失败次数追踪
+        - testAccountLocking(): 测试账号锁定
+        - testLockExpiration(): 测试锁定过期
+        - testSuccessfulLoginReset(): 测试成功登录重置
 
-7. 高可用性测试
-   - 核心测试类:
-     - HighAvailabilityTest: 高可用测试
-       - testAsyncNonBlocking(): 测试异步非阻塞
-       - testLocalCache(): 测试本地缓存
-       - testThreadPoolManagement(): 测试线程池管理
-       - testResourcePooling(): 测试资源池化
-       - testCircuitBreaker(): 测试熔断降级
-       - testRateLimiting(): 测试限流保护
-       - testLoadBalancing(): 测试负载均衡
-       - testFailureRetry(): 测试失败重试
+12. IP封禁服务测试
+    - 核心测试类:
+      - IpBlockServiceTest: IP封禁服务测试
+        - testIpBlocking(): 测试IP封禁
+        - testIpUnblocking(): 测试IP解封
+        - testBlockDuration(): 测试封禁时长
+        - testBlockThreshold(): 测试封禁阈值
+
+13. 安全审计日志测试
+    - 核心测试类:
+      - SecurityAuditLoggerTest: 安全审计日志测试
+        - testLogGeneration(): 测试日志生成
+        - testLogStorage(): 测试日志存储
+        - testLogQuery(): 测试日志查询
+        - testLogCleanup(): 测试日志清理
 
 ####### 3.3.2.1 测试方案概述
 1. 单元测试
@@ -1883,6 +2689,100 @@ graph TD
      * permission_id: bigint(20) - 权限ID
      * tenant_id: bigint(20) - 租户ID
      * created_time: datetime - 创建时间
+
+
+#### 2.4 dove-api-gateway
+##### 2.4.1 核心要求
+##### 2.4.2 基本信息
+##### 2.4.3 需求描述
+###### 2.4.3.1 业务需求
+  - 1. 模块职责
+   - 路由转发
+     - 基于路径的动态路由配置
+     - 服务发现与注册中心集成
+     - 智能负载均衡策略
+     - 灰度发布与版本控制
+     - 请求重试与故障转移
+   - 统一认证鉴权
+     - Token统一校验
+     - 权限规则统一管理
+     - 认证结果缓存
+     - 认证服务对接集成
+   - 安全防护
+     - 黑白名单动态配置
+     - XSS/SQL注入防护
+     - 请求报文加解密
+     - 防重放攻击
+   - 流量治理
+     - 分布式限流
+     - 熔断降级策略
+     - 流量监控与统计
+     - 流量染色与追踪
+   - 统一日志
+     - 访问日志记录
+     - 错误日志采集
+     - 性能指标统计
+     - 链路追踪集成
+
+- 2. 核心流程
+   ```mermaid
+   sequenceDiagram
+       participant C as Client
+       participant G as Gateway
+       participant F as Filter Chain
+       participant S as Service
+       
+       C->>G: HTTP Request
+       G->>F: 进入过滤器链
+       F->>F: 1. 请求解析
+       F->>F: 2. 认证鉴权
+       F->>F: 3. 限流熔断
+       F->>F: 4. 路由转发
+       F->>S: 5. 调用服务
+       S-->>G: Service Response
+       G-->>C: HTTP Response
+   ```
+###### 2.4.3.2 非功能需求
+##### 2.4.4 详细设计
+###### 2.4.4.1 核心类设计
+   - 路由转发
+     - 基于路径的动态路由配置: 通过 RouteDefinitionRepository 接口实现动态路由存储和加载,支持从配置中心实时更新
+     - 服务发现与注册中心集成: 实现 DiscoveryClientRouteDefinitionLocator 对接 Nacos/Eureka 等注册中心
+     - 智能负载均衡策略: 自定义 LoadBalancer 实现权重、最小连接数等负载均衡算法
+     - 灰度发布与版本控制: 通过 GrayReleaseFilter 实现基于请求头的灰度路由
+     - 请求重试与故障转移: 实现 RetryableFilter 处理请求重试,结合熔断降级
+   
+   - 统一认证鉴权
+     - Token统一校验: AuthenticationFilter 验证 JWT Token 有效性
+     - 权限规则统一管理: 基于 RBAC 模型实现 AuthorizationManager 权限校验
+     - 认证结果缓存: 使用 Redis 缓存认证结果减少认证服务压力
+     - 认证服务对接集成: 通过 AuthenticationClient 对接统一认证中心
+   
+   - 安全防护
+     - 黑白名单动态配置: IpListManager 管理 IP 黑白名单
+     - XSS/SQL注入防护: SecurityFilter 实现请求内容安全过滤
+     - 请求报文加解密: EncryptionUtils 提供报文加解密能力
+     - 防重放攻击: NonceManager 实现 nonce 校验防重放
+   
+   - 流量治理
+     - 分布式限流: RateLimiter 基于 Redis 实现分布式限流
+     - 熔断降级策略: CircuitBreaker 实现基于滑动窗口的熔断
+     - 流量监控与统计: MetricsCollector 收集请求指标数据
+     - 流量染色与追踪: TraceFilter 实现调用链路追踪
+   
+   - 统一日志
+     - 访问日志记录: AccessLogFilter 记录请求响应日志
+     - 错误日志采集: ErrorLogHandler 统一处理异常日志
+     - 性能指标统计: MetricsExporter 输出性能监控指标
+     - 链路追踪集成: 集成 SkyWalking 等 APM 工具
+    
+###### 2.4.4.2 核心流程
+
+
+
+
+
+
 
 
 
