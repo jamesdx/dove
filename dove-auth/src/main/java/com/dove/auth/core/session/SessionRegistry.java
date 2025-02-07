@@ -1,14 +1,14 @@
 package com.dove.auth.core.session;
 
+import com.dove.auth.core.session.model.SessionInformation;
+import com.dove.auth.core.session.repository.RedisSessionRepository;
 import com.dove.common.core.model.LoginUser;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import java.util.UUID;
 
 /**
  * 会话注册表
@@ -17,117 +17,80 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class SessionRegistry {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisSessionRepository sessionRepository;
     private final SessionProperties sessionProperties;
 
     /**
-     * 注册会话
+     * 注册新会话
      */
-    public void registerNewSession(String sessionId, LoginUser loginUser) {
-        String sessionKey = getSessionKey(sessionId);
-        String userSessionKey = getUserSessionKey(loginUser.getUserId());
+    public SessionInformation registerNewSession(LoginUser loginUser, String loginIp, String deviceInfo) {
+        // 创建会话信息
+        SessionInformation session = new SessionInformation();
+        session.setSessionId(UUID.randomUUID().toString());
+        session.setLoginUser(loginUser);
+        session.setLoginIp(loginIp);
+        session.setDeviceInfo(deviceInfo);
+        session.setLoginTime(LocalDateTime.now());
+        session.setLastAccessTime(LocalDateTime.now());
+        session.setExpireTime(LocalDateTime.now().plusMinutes(sessionProperties.getTimeout()));
 
-        // 检查是否超过最大会话数
+        // 检查并发会话限制
         if (!sessionProperties.isConcurrentLoginPermitted()) {
-            Set<Object> existingSessions = redisTemplate.opsForSet().members(userSessionKey);
-            if (existingSessions != null && !existingSessions.isEmpty()) {
-                if (sessionProperties.isMaxSessionsPreventsLogin()) {
-                    throw new IllegalStateException("Maximum sessions of " + sessionProperties.getMaximumSessions() + " for this principal exceeded");
+            Set<SessionInformation> existingSessions = sessionRepository.findByUserId(loginUser.getUserId());
+            if (!existingSessions.isEmpty()) {
+                if (existingSessions.size() >= sessionProperties.getMaximumSessions()) {
+                    throw new IllegalStateException("已达到最大会话数限制");
                 }
                 // 移除旧会话
-                existingSessions.forEach(oldSessionId -> removeSession((String) oldSessionId));
+                existingSessions.forEach(oldSession -> sessionRepository.deleteById(oldSession.getSessionId()));
             }
         }
 
-        // 保存会话信息
-        redisTemplate.opsForValue().set(sessionKey, loginUser, sessionProperties.getTimeout(), TimeUnit.MINUTES);
-        redisTemplate.opsForSet().add(userSessionKey, sessionId);
-    }
-
-    /**
-     * 移除会话
-     */
-    public void removeSession(String sessionId) {
-        String sessionKey = getSessionKey(sessionId);
-        LoginUser loginUser = getLoginUser(sessionId);
-        if (loginUser != null) {
-            String userSessionKey = getUserSessionKey(loginUser.getUserId());
-            redisTemplate.opsForSet().remove(userSessionKey, sessionId);
-        }
-        redisTemplate.delete(sessionKey);
+        // 保存会话
+        sessionRepository.save(session);
+        return session;
     }
 
     /**
      * 获取会话信息
      */
-    public LoginUser getLoginUser(String sessionId) {
-        String sessionKey = getSessionKey(sessionId);
-        return (LoginUser) redisTemplate.opsForValue().get(sessionKey);
+    public SessionInformation getSessionInformation(String sessionId) {
+        return sessionRepository.findById(sessionId);
     }
 
     /**
      * 获取用户的所有会话
      */
-    public List<String> getUserSessions(Long userId) {
-        String userSessionKey = getUserSessionKey(userId);
-        Set<Object> sessions = redisTemplate.opsForSet().members(userSessionKey);
-        return sessions != null ? new ArrayList<>(sessions.stream().map(Object::toString).toList()) : new ArrayList<>();
+    public Set<SessionInformation> getAllSessions(Long userId) {
+        return sessionRepository.findByUserId(userId);
     }
 
     /**
-     * 更新会话
+     * 更新会话访问时间
      */
-    public void refreshSession(String sessionId) {
-        String sessionKey = getSessionKey(sessionId);
-        redisTemplate.expire(sessionKey, sessionProperties.getTimeout(), TimeUnit.MINUTES);
+    public void updateLastAccessTime(String sessionId) {
+        SessionInformation session = getSessionInformation(sessionId);
+        if (session != null && !session.isExpired()) {
+            session.updateLastAccessTime();
+            sessionRepository.save(session);
+        }
     }
 
     /**
-     * 获取所有会话
+     * 使会话过期
      */
-    public List<String> getAllSessions() {
-        String pattern = getSessionKey("*");
-        Set<String> keys = redisTemplate.keys(pattern);
-        return keys != null ? new ArrayList<>(keys) : new ArrayList<>();
+    public void expireNow(String sessionId) {
+        SessionInformation session = getSessionInformation(sessionId);
+        if (session != null) {
+            session.setExpired(true);
+            sessionRepository.save(session);
+        }
     }
 
     /**
-     * 获取会话数量
+     * 移除会话
      */
-    public long getSessionCount() {
-        String pattern = getSessionKey("*");
-        Set<String> keys = redisTemplate.keys(pattern);
-        return keys != null ? keys.size() : 0;
-    }
-
-    /**
-     * 获取用户会话数量
-     */
-    public long getUserSessionCount(Long userId) {
-        String userSessionKey = getUserSessionKey(userId);
-        Long size = redisTemplate.opsForSet().size(userSessionKey);
-        return size != null ? size : 0;
-    }
-
-    /**
-     * 判断会话是否存在
-     */
-    public boolean sessionExists(String sessionId) {
-        String sessionKey = getSessionKey(sessionId);
-        return Boolean.TRUE.equals(redisTemplate.hasKey(sessionKey));
-    }
-
-    /**
-     * 获取会话key
-     */
-    private String getSessionKey(String sessionId) {
-        return sessionProperties.getRedisKeyPrefix() + "session:" + sessionId;
-    }
-
-    /**
-     * 获取用户会话key
-     */
-    private String getUserSessionKey(Long userId) {
-        return sessionProperties.getRedisKeyPrefix() + "user:" + userId;
+    public void removeSessionInformation(String sessionId) {
+        sessionRepository.deleteById(sessionId);
     }
 } 
