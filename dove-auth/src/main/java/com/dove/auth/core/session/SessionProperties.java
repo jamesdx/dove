@@ -43,7 +43,12 @@ public class SessionProperties {
     private int cleanupInterval = 5;
 
     /**
-     * Redis key前缀
+     * 会话监控间隔（分钟）
+     */
+    private int monitorInterval = 1;
+
+    /**
+     * Redis缓存前缀
      */
     private String redisKeyPrefix = "dove:auth:session:";
 
@@ -66,19 +71,14 @@ public class SessionProperties {
     private boolean monitorEnabled = true;
 
     /**
-     * 监控统计间隔（分钟）
-     */
-    private int monitorInterval = 1;
-
-    /**
      * 是否启用会话持久化
      */
     private boolean persistenceEnabled = true;
 
     /**
-     * 持久化间隔（分钟）
+     * 是否启用会话验证
      */
-    private int persistenceInterval = 3;
+    private boolean validationEnabled = true;
 
     /**
      * 会话验证间隔（分钟）
@@ -94,4 +94,14 @@ public class SessionProperties {
      * 集群同步间隔（毫秒）
      */
     private int clusterSyncInterval = 1000;
+
+    /**
+     * 是否记录会话访问日志
+     */
+    private boolean accessLogEnabled = true;
+
+    /**
+     * 是否记录会话操作日志
+     */
+    private boolean operationLogEnabled = true;
 } 
