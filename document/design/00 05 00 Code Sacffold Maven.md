@@ -1059,7 +1059,7 @@ graph TD
    - 版本号: 1.0.0
    - 父项目: dove-parent
    - 依赖管理: dove-dependencies
-   - 文件夹结构：
+   - 2.2.1.1文件夹结构：
     ```
     dove-auth
     ├── src
@@ -1125,10 +1125,13 @@ graph TD
     │   │   │       │       └── SecurityAlertService.java # 安全告警服务
     │   │   │       ├── domain              # 领域模型
     │   │   │       │   ├── entity         # 实体类
-    │   │   │       │   │   ├── ThirdPartyUserEntity.java # 第三方用户实体
-    │   │   │       │   │   ├── SecurityAuditEntity.java  # 安全审计实体
-    │   │   │       │   │   ├── LoginLogEntity.java      # 登录日志实体
-    │   │   │       │   │   └── OperationLogEntity.java  # 操作日志实体
+    │   │   │       │   │   ├── AuthUser.java                # 用户基本信息实体
+    │   │   │       │   │   ├── AuthUserThird.java          # 第三方账号绑定实体  
+    │   │   │       │   │   ├── AuthUserPasswordHistory.java # 密码历史记录实体
+    │   │   │       │   │   ├── AuthUserToken.java          # 用户令牌实体
+    │   │   │       │   │   ├── AuthUserOnline.java         # 在线用户实体
+    │   │   │       │   │   ├── AuthLoginLog.java           # 登录日志实体
+    │   │   │       │   │   └── AuthSecurityAudit.java      # 安全审计实体
     │   │   │       │   └── vo             # 值对象
     │   │   │       │       └── LoginVO.java         # 登录值对象
     │   │   │       ├── enums               # 枚举定义
@@ -2305,6 +2308,7 @@ graph TD
       | status | 处理状态 | 1 | 0-1 | - | tinyint | 是 | 0 | 0或1 | - | 系统管理员可查看 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
       | handle_time | 处理时间 | - | - | - | datetime | 否 | null | - | - | 系统管理员可查看 | 永久保存 | - | 低 | 定期备份 | 记录修改 |
       | handle_user | 处理人ID | 32 | - | - | varchar | 否 | null | 存在性校验 | 外键 | 系统管理员可查看 | 永久保存 | - | 中 | 定期备份 | 记录变更 |
+  
   - 主键设计清单: 
   1. 用户认证相关表
     - auth_user (用户基本信息表)
@@ -2381,6 +2385,372 @@ graph TD
    用于确保业务唯一性
 
 3. 所有主键字段统一命名为id,便于开发和维护
+
+- Spring Data JPA 实体类设计:
+
+1. 用户基本信息实体 (AuthUser)
+   - @Entity, @Table(name = "auth_user")
+   - @Id 使用 UUID 主键
+   - @OneToMany 映射到其他关联实体:
+     - userThirds: Set<AuthUserThird>
+     - passwordHistories: List<AuthUserPasswordHistory>  
+     - tokens: Set<AuthUserToken>
+     - onlineSessions: Set<AuthUserOnline>
+     - loginLogs: List<AuthLoginLog>
+     - securityAudits: List<AuthSecurityAudit>
+   - @Version 乐观锁控制
+   - @DynamicUpdate 支持部分字段更新
+
+2. 第三方账号绑定实体 (AuthUserThird)
+   - @Entity, @Table(name = "auth_user_third")
+   - @Id 使用 UUID 主键
+   - @ManyToOne 关联 AuthUser
+   - @UniqueConstraint(user_id, third_type, third_id)
+
+3. 密码历史记录实体 (AuthUserPasswordHistory)
+   - @Entity, @Table(name = "auth_user_password_history") 
+   - @Id 使用 UUID 主键
+   - @ManyToOne 关联 AuthUser
+   - @OrderBy("createTime desc")
+
+4. 用户令牌实体 (AuthUserToken)
+   - @Entity, @Table(name = "auth_user_token")
+   - @Id 使用 UUID 主键
+   - @ManyToOne 关联 AuthUser
+   - @OneToOne 关联 AuthUserOnline
+   - @Column(unique = true) token字段唯一约束
+
+5. 在线用户实体 (AuthUserOnline)
+   - @Entity, @Table(name = "auth_user_online")
+   - @Id 使用 UUID 主键
+   - @ManyToOne 关联 AuthUser
+   - @OneToOne 关联 AuthUserToken
+   - @UniqueConstraint(user_id, device_id)
+
+6. 登录日志实体 (AuthLoginLog)
+   - @Entity, @Table(name = "auth_login_log")
+   - @Id 使用 UUID 主键
+   - @ManyToOne 关联 AuthUser
+   - @Index 登录时间索引
+
+7. 安全审计实体 (AuthSecurityAudit)
+   - @Entity, @Table(name = "auth_security_audit")
+   - @Id 使用 UUID 主键
+   - @ManyToOne 关联 AuthUser
+   - @ManyToOne(name = "handleUser") 自引用关联处理人
+   - @Index 审计时间索引
+
+  核心设计要点:
+  - 采用 UUID 主键,支持分布式
+  - 合理使用单向/双向关联
+  - 设置级联策略和懒加载
+  - 添加必要的约束和索引
+  - 实现审计功能(创建时间、更新时间等)
+  - 使用乐观锁控制并发
+
+
+- Spring Data JPA Repository 设计:
+
+1. AuthUserRepository (用户基本信息数据访问)
+   - 继承 JpaRepository<AuthUser, UUID>
+   - 方法:
+     - findByUsername: 根据用户名查询用户
+     - findByEmail: 根据邮箱查询用户
+     - findByPhone: 根据手机号查询用户
+     - findByUsernameOrEmailOrPhone: 多字段组合查询用户
+     - updatePassword: 更新用户密码
+     - updateStatus: 更新用户状态
+     - findByLastLoginTimeBefore: 查询指定时间前登录的用户
+     - countByStatus: 统计不同状态的用户数量
+
+2. AuthUserThirdRepository (第三方账号绑定数据访问)
+   - 继承 JpaRepository<AuthUserThird, UUID>
+   - 方法:
+     - findByUserIdAndThirdType: 查询用户指定类型的第三方账号
+     - findByThirdTypeAndThirdId: 根据第三方类型和ID查询绑定记录
+     - deleteByUserIdAndThirdType: 解绑指定类型的第三方账号
+     - countByThirdType: 统计各类型第三方账号数量
+
+3. AuthUserPasswordHistoryRepository (密码历史记录数据访问)
+   - 继承 JpaRepository<AuthUserPasswordHistory, UUID>
+   - 方法:
+     - findByUserIdOrderByCreateTimeDesc: 查询用户密码历史记录
+     - findByUserIdAndPasswordHash: 检查密码是否在历史记录中
+     - deleteByCreateTimeBefore: 清理指定时间前的历史记录
+     - findLatestByUserId: 获取用户最近的密码记录
+
+4. AuthUserTokenRepository (用户令牌数据访问)
+   - 继承 JpaRepository<AuthUserToken, UUID>
+   - 方法:
+     - findByToken: 根据令牌值查询
+     - findByUserIdAndDeviceId: 查询用户设备令牌
+     - deleteByExpireTimeBefore: 清理过期令牌
+     - updateExpireTime: 更新令牌过期时间
+     - findValidTokensByUserId: 查询用户有效令牌
+
+5. AuthUserOnlineRepository (在线用户数据访问)
+   - 继承 JpaRepository<AuthUserOnline, UUID>
+   - 方法:
+     - findByUserIdAndDeviceId: 查询用户设备在线状态
+     - updateLastAccessTime: 更新最后访问时间
+     - deleteByLastAccessTimeBefore: 清理长时间未访问记录
+     - countByStatus: 统计在线用户数量
+     - findByStatusAndLastAccessTimeBefore: 查询可能离线的用户
+
+6. AuthLoginLogRepository (登录日志数据访问)
+   - 继承 JpaRepository<AuthLoginLog, UUID>
+   - 方法:
+     - findByUserIdOrderByLoginTimeDesc: 查询用户登录历史
+     - findByLoginTimeBetween: 查询时间段内的登录记录
+     - countByStatusAndLoginTimeBetween: 统计登录成功/失败次数
+     - findByIpAndLoginTimeBetween: 查询IP登录记录
+     - findAbnormalLogins: 查询异常登录记录
+
+7. AuthSecurityAuditRepository (安全审计数据访问)
+   - 继承 JpaRepository<AuthSecurityAudit, UUID>
+   - 方法:
+     - findByUserIdAndEventType: 查询用户特定类型审计记录
+     - findByRiskLevelAndStatus: 查询待处理的风险事件
+     - updateAuditStatus: 更新审计记录状态
+     - findByEventTimeBetween: 查询时间段内的审计记录
+     - countByRiskLevel: 统计不同风险等级的事件数量
+
+核心设计要点:
+- 继承 JpaRepository 获取基础CRUD功能
+- 使用方法名约定实现自定义查询
+- 合理使用 @Query 注解优化复杂查询
+- 添加必要的统计和分析方法
+- 实现数据清理和维护方法
+- 支持分页和排序功能
+
+
+- Service 层设计:
+
+1. AuthUserService (用户基本信息服务)
+   - 方法:
+     - register: 用户注册,包含密码加密、初始化用户状态等
+     - login: 用户登录,验证密码、生成token、记录登录日志
+     - findByIdentifier: 根据用户名/邮箱/手机号查找用户
+     - updatePassword: 修改密码,包含密码历史检查、加密存储
+     - updateUserStatus: 更新用户状态,触发相关状态变更事件
+     - checkInactiveUsers: 检查长期未登录用户,执行相应处理
+     - getUserStatistics: 获取用户状态统计数据
+
+2. AuthUserThirdService (第三方账号服务)
+   - 方法:
+     - bindThirdAccount: 绑定第三方账号,校验唯一性
+     - unbindThirdAccount: 解绑第三方账号
+     - loginByThird: 第三方账号登录
+     - findUserThirdAccounts: 查询用户绑定的第三方账号
+     - getThirdBindingStats: 获取第三方绑定统计数据
+
+3. AuthUserPasswordHistoryService (密码历史服务)
+   - 方法:
+     - addPasswordHistory: 记录新密码历史
+     - checkPasswordReuse: 检查密码是否重复使用
+     - cleanupOldHistories: 清理过期密码历史记录
+     - getLatestPassword: 获取最近的密码记录
+     - validatePasswordPolicy: 密码策略校验
+
+4. AuthUserTokenService (用户令牌服务)
+   - 方法:
+     - createToken: 创建新令牌,设置过期时间
+     - validateToken: 验证令牌有效性
+     - refreshToken: 刷新令牌过期时间
+     - revokeToken: 撤销指定令牌
+     - cleanupExpiredTokens: 清理过期令牌
+     - getUserValidTokens: 获取用户有效令牌列表
+
+5. AuthUserOnlineService (在线用户服务)
+   - 方法:
+     - updateOnlineStatus: 更新用户在线状态
+     - heartbeat: 更新用户最后访问时间
+     - checkOfflineUsers: 检查超时离线用户
+     - getOnlineStatistics: 获取在线用户统计
+     - forceOffline: 强制用户下线
+
+6. AuthLoginLogService (登录日志服务)
+   - 方法:
+     - recordLoginAttempt: 记录登录尝试
+     - getUserLoginHistory: 获取用户登录历史
+     - analyzeLoginPattern: 分析登录行为模式
+     - detectAbnormalLogin: 检测异常登录
+     - getLoginStatistics: 获取登录统计数据
+     - cleanupOldLogs: 清理历史登录日志
+
+7. AuthSecurityAuditService (安全审计服务)
+   - 方法:
+     - recordSecurityEvent: 记录安全事件
+     - processSecurityAlert: 处理安全告警
+     - assignAuditTask: 分配审计任务
+     - updateAuditResult: 更新审计结果
+     - getSecurityMetrics: 获取安全指标统计
+     - generateAuditReport: 生成审计报告
+
+核心设计要点:
+- 实现完整的业务逻辑封装
+- 处理复杂的业务规则和流程
+- 确保数据一致性和完整性
+- 实现必要的安全控制
+- 提供统计分析功能
+- 支持异步处理和事件通知
+- 实现缓存策略
+- 处理分布式场景下的并发
+
+
+
+
+- 实体关系分析:
+  1. auth_user (用户基本信息表) 与其他表的关系:
+
+  - auth_user 与 auth_user_third (第三方账号绑定表)
+    - 关系类型: 一对多
+    - 说明: 一个用户可以绑定多个第三方账号
+    - 关联字段: auth_user.id = auth_user_third.user_id
+
+  - auth_user 与 auth_user_password_history (密码历史记录表)
+    - 关系类型: 一对多
+    - 说明: 一个用户可以有多条密码历史记录
+    - 关联字段: auth_user.id = auth_user_password_history.user_id
+
+  - auth_user 与 auth_user_token (用户令牌表)
+    - 关系类型: 一对多
+    - 说明: 一个用户可以有多个有效令牌(多设备登录)
+    - 关联字段: auth_user.id = auth_user_token.user_id
+
+  - auth_user 与 auth_user_online (在线用户表)
+    - 关系类型: 一对多
+    - 说明: 一个用户可以在多个设备上同时在线
+    - 关联字段: auth_user.id = auth_user_online.user_id
+
+  - auth_user 与 auth_login_log (登录日志表)
+    - 关系类型: 一对多
+    - 说明: 一个用户可以有多条登录日志记录
+    - 关联字段: auth_user.id = auth_login_log.user_id
+
+  - auth_user 与 auth_security_audit (安全审计表)
+    - 关系类型: 一对多
+    - 说明: 一个用户可以有多条安全审计记录
+    - 关联字段: auth_user.id = auth_security_audit.user_id
+
+  2. auth_user_token 与 auth_user_online 的关系:
+    - 关系类型: 一对一
+    - 说明: 一个令牌对应一个在线会话
+    - 关联字段: auth_user_token.token = auth_user_online.token_id
+
+  3. auth_security_audit 内部关系:
+    - 关系类型: 自引用
+    - 说明: 审计记录的处理人也是用户
+    - 关联字段: auth_security_audit.handle_user 关联 auth_user.id
+
+  总结:
+  - 以 auth_user 为核心的星型结构
+  - 主要是一对多关系,体现了用户与各类记录的对应关系
+  - 包含一个一对一关系(token与在线会话)
+  - 包含一个自引用关系(审计记录的处理)
+
+
+
+
+- 模型设计
+  - auth_user: 用户基本信息表 (主表)
+      - id: bigint(20) 主键,用户唯一标识
+      - username: varchar(50) 用户名,登录账号,唯一索引
+      - password: varchar(100) 加密后的密码
+      - email: varchar(100) 邮箱地址,唯一索引
+      - phone: varchar(20) 手机号,唯一索引
+      - status: tinyint(1) 账号状态(0-禁用,1-启用)
+      - mfa_enabled: tinyint(1) 是否启用多因素认证(0-未启用,1-已启用)
+      - mfa_secret: varchar(32) 多因素认证密钥
+      - login_attempts: int(11) 登录尝试次数
+      - locked_until: datetime 账号锁定截止时间
+      - last_login_time: datetime 最后登录时间
+      - create_time: datetime 账号创建时间
+      - update_time: datetime 信息更新时间
+
+    - auth_user_third: 第三方账号绑定表 (与auth_user一对多关系)
+      - id: bigint(20) 主键
+      - user_id: bigint(20) 关联的用户ID,外键关联auth_user.id
+      - third_type: varchar(20) 第三方平台类型(GOOGLE/GITHUB/WECHAT等)
+      - third_id: varchar(100) 第三方平台用户唯一标识
+      - third_username: varchar(100) 第三方平台用户名
+      - third_email: varchar(100) 第三方平台邮箱
+      - third_avatar: varchar(255) 第三方平台头像URL
+      - access_token: varchar(255) 访问令牌
+      - refresh_token: varchar(255) 刷新令牌
+      - token_expires: datetime 令牌过期时间
+      - bind_time: datetime 绑定时间
+      - unbind_time: datetime 解绑时间
+      - status: tinyint(1) 绑定状态(0-解绑,1-绑定)
+      - 索引: (user_id, third_type) 联合唯一索引
+      
+    - auth_user_password_history: 密码历史记录表 (与auth_user一对多关系)
+      - id: bigint(20) 主键
+      - user_id: bigint(20) 用户ID,外键关联auth_user.id
+      - password: varchar(100) 历史密码记录
+      - password_type: varchar(20) 密码类型(INITIAL/RESET/CHANGE)
+      - create_time: datetime 密码创建时间
+      - create_ip: varchar(50) 密码修改IP
+      - create_location: varchar(100) 密码修改地点
+      - 索引: user_id 普通索引
+
+  2. 会话管理相关表
+    - auth_user_token: 用户令牌表 (与auth_user一对多关系)
+      - id: bigint(20) 主键
+      - user_id: bigint(20) 用户ID,外键关联auth_user.id
+      - token: varchar(255) 令牌值,唯一索引
+      - token_type: varchar(20) 令牌类型(JWT/Session)
+      - refresh_token: varchar(255) 刷新令牌
+      - device_type: varchar(20) 设备类型(Web/Android/iOS)
+      - device_id: varchar(100) 设备唯一标识
+      - expire_time: datetime 过期时间
+      - create_time: datetime 创建时间
+      - status: tinyint(1) 状态(0-失效,1-有效)
+      - 索引: (user_id, device_id) 联合唯一索引
+
+    - auth_user_online: 在线用户表 (与auth_user一对多关系)
+      - id: bigint(20) 主键
+      - user_id: bigint(20) 用户ID,外键关联auth_user.id
+      - token_id: varchar(255) 令牌ID,外键关联auth_user_token.token
+      - browser: varchar(50) 浏览器
+      - os: varchar(50) 操作系统
+      - device_id: varchar(100) 设备ID
+      - ip: varchar(50) 登录IP
+      - location: varchar(255) 登录地点
+      - start_time: datetime 登录时间
+      - last_access_time: datetime 最后访问时间
+      - expire_time: datetime 过期时间
+      - status: tinyint(1) 在线状态(0-离线,1-在线)
+      - 索引: (user_id, device_id) 联合唯一索引
+
+  3. 安全审计相关表
+    - auth_login_log: 登录日志表 (与auth_user一对多关系)
+      - id: bigint(20) 主键
+      - user_id: bigint(20) 用户ID,外键关联auth_user.id
+      - login_type: varchar(20) 登录类型(账号密码/手机验证码/第三方)
+      - login_ip: varchar(50) 登录IP
+      - login_location: varchar(100) 登录地点
+      - browser: varchar(50) 浏览器
+      - os: varchar(50) 操作系统
+      - device_id: varchar(100) 设备ID
+      - status: tinyint(1) 状态(0-失败,1-成功)
+      - msg: varchar(255) 提示消息
+      - login_time: datetime 登录时间
+      - 索引: user_id 普通索引
+
+    - auth_security_audit: 安全审计表 (与auth_user一对多关系)
+      - id: bigint(20) 主键
+      - user_id: bigint(20) 用户ID,外键关联auth_user.id
+      - event_type: varchar(50) 事件类型(登录/修改密码/重置密码等)
+      - event_time: datetime 事件时间
+      - ip: varchar(50) IP地址
+      - details: text 详细信息
+      - risk_level: tinyint(1) 风险等级(0-低,1-中,2-高)
+      - status: tinyint(1) 处理状态(0-未处理,1-已处理)
+      - handle_time: datetime 处理时间
+      - handle_user: bigint(20) 处理人ID,外键关联auth_user.id
+      - 索引: user_id 普通索引
+
 
 ###### 2.2.3.3 测试用例设计
 1. 登录认证测试

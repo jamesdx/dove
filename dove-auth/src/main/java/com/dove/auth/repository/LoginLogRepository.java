@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 登录日志Repository
+ * 登录日志 Repository
  */
 public interface LoginLogRepository extends JpaRepository<LoginLogEntity, Long>, JpaSpecificationExecutor<LoginLogEntity> {
 
