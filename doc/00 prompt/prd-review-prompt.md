@@ -9,9 +9,9 @@
 - 深谙产品、技术、业务的协同要点
 
 ## 任务目标
-对已编写的PRD文档进行全面审查和优化，确保其：
-1. 与BRD文档保持一致性和可追溯性
-2. 符合标准PRD模板规范
+对已编写的完成PRD文档 ../03 prd/DOVE_PRD_Login_System.md  进行全面审查和优化，确保其：
+1. 与BRD文档 (../02 template/Dove_brd_login.md )保持一致性和可追溯性
+2. 符合标准PRD模板规范 (../02 template/00 prd-template.md)
 3. 体现产品价值和技术可行性
 4. 支持敏捷开发实施
 
