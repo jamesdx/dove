@@ -2,10 +2,11 @@
 版本：v1.0.1
 日期：2024-03-21
 
-## 1. 上下文边界图
+## 1. 上下文映射图（Context Map Diagram）
 
 ```mermaid
 graph TB
+    %% 定义限界上下文
     subgraph BC1[认证上下文]
         direction TB
         A1[身份认证]
@@ -40,18 +41,28 @@ graph TB
         E1[SSO集成]
         E2[LDAP集成]
         E3[OAuth集成]
+        E4[防腐层]
     end
 
-    %% 强依赖关系
-    BC1 -->|认证结果| BC2
-    BC1 -->|用户验证| BC3
-    BC2 -->|会话信息| BC4
-    BC3 -->|用户数据| BC1
+    %% 定义关系
+    %% 合作关系（双向箭头）
+    BC1 <--> |"合作关系\n(API+事件)"| BC2
 
-    %% 弱依赖关系
-    BC1 -.->|认证日志| BC4
-    BC5 -.->|身份信息| BC1
-    BC2 -.->|状态变更| BC3
+    %% 依赖关系（单向箭头）
+    BC1 --> |"依赖关系\n(API调用)"| BC3
+    BC2 --> |"依赖关系\n(事件发布)"| BC4
+
+    %% 共享内核（双向实线）
+    BC1 === |"共享内核\n(认证模型)"| BC3
+
+    %% 防腐层（虚线）
+    BC5 -.-> |"防腐层\n(协议转换)"| BC1
+
+    %% 标注通信方式
+    classDef api fill:#f9f,stroke:#333,stroke-width:2px
+    classDef event fill:#bbf,stroke:#333,stroke-width:2px
+    classDef shared fill:#bfb,stroke:#333,stroke-width:2px
+    classDef acl fill:#fbb,stroke:#333,stroke-width:2px
 ```
 
 ## 2. 上下文描述
@@ -77,10 +88,18 @@ graph TB
   - 认证结果缓存
 
 - 对外接口：
-  - 认证请求接口
-  - 认证结果查询
-  - 策略配置接口
-  - 状态查询接口
+  - REST API:
+    ```
+    POST /api/v1/auth/login
+    POST /api/v1/auth/mfa
+    GET /api/v1/auth/status
+    ```
+  - 事件：
+    ```
+    认证成功事件
+    认证失败事件
+    策略变更事件
+    ```
 
 ### 2.2 会话上下文（BC2）
 - 核心职责：
@@ -103,10 +122,18 @@ graph TB
   - 状态同步记录
 
 - 对外接口：
-  - 会话管理API
-  - 令牌验证接口
-  - 状态同步接口
-  - 会话查询接口
+  - REST API:
+    ```
+    POST /api/v1/sessions
+    GET /api/v1/sessions/{id}
+    DELETE /api/v1/sessions/{id}
+    ```
+  - 事件：
+    ```
+    会话创建事件
+    会话过期事件
+    会话注销事件
+    ```
 
 ### 2.3 用户上下文（BC3）
 - 核心职责：
@@ -128,10 +155,17 @@ graph TB
   - 关联账号数据
 
 - 对外接口：
-  - 用户信息CRUD
-  - 状态查询接口
-  - 凭证管理接口
-  - 账号关联接口
+  - REST API:
+    ```
+    POST /api/v1/users
+    GET /api/v1/users/{id}
+    PUT /api/v1/users/{id}
+    ```
+  - 共享模型：
+    ```
+    用户身份模型
+    凭证模型
+    ```
 
 ### 2.4 安全审计上下文（BC4）
 - 核心职责：
@@ -154,10 +188,16 @@ graph TB
   - 审计报告
 
 - 对外接口：
-  - 日志记录接口
-  - 风险评估接口
-  - 合规检查接口
-  - 报告生成接口
+  - REST API:
+    ```
+    POST /api/v1/audit/logs
+    GET /api/v1/audit/reports
+    ```
+  - 消息订阅：
+    ```
+    认证事件订阅
+    会话事件订阅
+    ```
 
 ### 2.5 外部集成上下文（BC5）
 - 核心职责：
@@ -180,48 +220,69 @@ graph TB
   - 临时凭证数据
 
 - 对外接口：
-  - 集成配置接口
-  - 认证代理接口
-  - 数据同步接口
-  - 状态查询接口
+  - REST API:
+    ```
+    POST /api/v1/integration/sso
+    POST /api/v1/integration/ldap
+    ```
+  - 防腐层接口：
+    ```
+    协议转换接口
+    数据映射接口
+    ```
 
-## 3. 上下文关系
+## 3. 跨上下文关系
 
-### 3.1 认证上下文与用户上下文
-- 上游上下文：用户上下文
-- 下游上下文：认证上下文
-- 通信方式：同步RPC + 事件通知
-- 数据流向：
-  - 用户上下文提供用户基本信息和凭证信息
-  - 认证上下文返回认证结果
-  - 状态变更通过事件通知
-
-### 3.2 认证上下文与会话上下文
+### 3.1 认证上下文与会话上下文
 - 上游上下文：认证上下文
+- 与上游关系类型：合作关系（Cooperation）
 - 下游上下文：会话上下文
-- 通信方式：同步RPC + 消息队列
+- 与下游关系类型：合作关系（Cooperation）
+- 通信方式：
+  - 同步：RESTful API
+  - 异步：事件发布/订阅（认证结果事件）
 - 数据流向：
-  - 认证上下文提供认证结果
-  - 会话上下文创建和管理会话
-  - 状态变更通过消息队列同步
+  - 认证上下文 -> 会话上下文：认证结果、用户信息
+  - 会话上下文 -> 认证上下文：会话状态、令牌验证
+
+### 3.2 认证上下文与用户上下文
+- 上游上下文：用户上下文
+- 与上游关系类型：共享内核（Shared Kernel）
+- 下游上下文：认证上下文
+- 与下游关系类型：共享内核（Shared Kernel）
+- 通信方式：
+  - 同步：共享数据模型
+  - 异步：事件发布/订阅
+- 数据流向：
+  - 共享用户身份模型
+  - 共享凭证模型
+  - 状态变更通知
 
 ### 3.3 会话上下文与安全审计上下文
 - 上游上下文：会话上下文
+- 与上游关系类型：依赖关系（Dependency）
 - 下游上下文：安全审计上下文
-- 通信方式：异步消息 + 日志流
+- 与下游关系类型：服务消费者（Consumer）
+- 通信方式：
+  - 异步：消息队列（Kafka/RabbitMQ）
+  - 日志流：ELK Stack
 - 数据流向：
-  - 会话操作日志
-  - 状态变更事件
-  - 安全告警信息
+  - 会话操作事件
+  - 安全告警事件
+  - 审计日志流
 
 ### 3.4 外部集成上下文与认证上下文
 - 上游上下文：外部集成上下文
+- 与上游关系类型：防腐层（Anti-corruption Layer）
 - 下游上下文：认证上下文
-- 通信方式：同步RPC + 数据同步
+- 与下游关系类型：服务提供者（Provider）
+- 通信方式：
+  - 同步：RESTful API（通过防腐层）
+  - 配置：动态配置更新
 - 数据流向：
   - 外部身份信息转换
-  - 认证请求代理
-  - 结果同步回调
+  - 协议适配转换
+  - 配置同步更新
 
 ## 4. 微服务映射
 
@@ -234,15 +295,21 @@ graph TB
   - 管理认证配置
 - 接口定义：
   ```
+  # RESTful API
   POST /api/v1/auth/login
   POST /api/v1/auth/mfa
   GET /api/v1/auth/status
   PUT /api/v1/auth/policy
+
+  # 事件
+  AuthenticationSucceeded
+  AuthenticationFailed
+  PolicyUpdated
   ```
 - 依赖服务：
-  - 用户服务
-  - 会话服务
-  - 外部集成服务
+  - 用户服务（共享内核）
+  - 会话服务（合作关系）
+  - 集成服务（通过防腐层）
 
 ### 4.2 会话服务（Session Service）
 - 对应上下文：会话上下文
@@ -252,14 +319,20 @@ graph TB
   - 同步登录状态
 - 接口定义：
   ```
+  # RESTful API
   POST /api/v1/sessions
   GET /api/v1/sessions/{id}
   PUT /api/v1/sessions/{id}/refresh
   DELETE /api/v1/sessions/{id}
+
+  # 事件
+  SessionCreated
+  SessionExpired
+  SessionTerminated
   ```
 - 依赖服务：
-  - 认证服务
-  - 审计服务
+  - 认证服务（合作关系）
+  - 审计服务（发布者）
 
 ### 4.3 用户服务（User Service）
 - 对应上下文：用户上下文
@@ -269,13 +342,19 @@ graph TB
   - 凭证管理
 - 接口定义：
   ```
+  # RESTful API
   POST /api/v1/users
   GET /api/v1/users/{id}
   PUT /api/v1/users/{id}
   PATCH /api/v1/users/{id}/status
+
+  # 共享模型
+  UserIdentity
+  UserCredential
   ```
 - 依赖服务：
-  - 审计服务
+  - 认证服务（共享内核）
+  - 审计服务（发布者）
 
 ### 4.4 审计服务（Audit Service）
 - 对应上下文：安全审计上下文
@@ -285,12 +364,18 @@ graph TB
   - 合规检查
 - 接口定义：
   ```
+  # RESTful API
   POST /api/v1/audit/logs
   GET /api/v1/audit/reports
   POST /api/v1/audit/risks
   GET /api/v1/audit/compliance
+
+  # 消息订阅
+  AuthenticationEvents
+  SessionEvents
+  UserEvents
   ```
-- 依赖服务：无
+- 依赖服务：无（纯消费者）
 
 ### 4.5 集成服务（Integration Service）
 - 对应上下文：外部集成上下文
@@ -300,14 +385,19 @@ graph TB
   - 配置管理
 - 接口定义：
   ```
+  # RESTful API
   POST /api/v1/integration/sso
   POST /api/v1/integration/ldap
   POST /api/v1/integration/oauth
   PUT /api/v1/integration/config
+
+  # 防腐层接口
+  ProtocolTranslator
+  DataMapper
   ```
 - 依赖服务：
-  - 认证服务
-  - 用户服务
+  - 认证服务（通过防腐层）
+  - 用户服务（数据同步）
 
 ## 附录
 
@@ -321,38 +411,6 @@ graph TB
   - 初始版本
   - 完成上下文分析
   - 定义服务边界
-  - 设计接口规范 
-
-
-
-
-
-
-
-
-  # DDD 
-  ## 获得 DDD 设计思路 - ChatGpt
-  请告诉我， 一个专业 DDD 如何一步一步的 完成一个需求的 DDD 设计。 
-  如果我们采用 DDD的设计模式，采用微服务架构， 我们回到这个问题“你是一个专业的、有10年DDD实战经验的 DDD专家， 如何一步一步的 完成一个需求的 DDD ，满足指导 下一步 开发、测试、运维 工作
-
-  ## 分解每一步
-  你是一个专业的、有10年DDD实战经验的 DDD专家，根据你上面“请告诉我， 一个专业 DDD 如何一步一步的 完成一个需求的 DDD 设计” 的问题回答内容， 请告诉我入 如何一步一步的完成 “构建领域模型（Domain Modeling）” 任务
-
-
-## 生成 Prompt - Claude
- 你是一个专业的、有10年DDD实战经验的 DDD专家， 请告诉我入 如何一步一步的完成 “构建领域模型（Domain Modeling）” 任务 这是“构建领域模型（Domain Modeling）” 的描述： “2. 构建领域模型（Domain Modeling）
-
-2.1 识别领域对象（Entity、Value Object）
-	•	实体（Entity）：有独立标识且生命周期可追踪的对象，例如订单、客户等。
-	•	值对象（Value Object）：没有唯一标识，只由属性定义的对象，例如地址、金额、时间段等。
-	•	确保值对象是不可变的，避免与实体混淆。
-
-2.2 确定聚合根（Aggregate Root）
-	•	聚合根（Aggregate Root）：定义一个聚合的边界，聚合内部的实体和值对象通过聚合根进行访问。聚合根保证了聚合内部的一致性。
-	•	确保聚合根的操作是事务性的，即在同一事务内完成聚合内部数据的一致性更新。
-
-2.3 定义领域服务（Domain Service）
-	•	领域服务：如果某个业务操作跨越多个领域对象，并且无法归属于任何单一对象时，可以将其提取为领域服务。例如，订单确认服务、库存调整服务等。
-
-2.4 领域事件（Domain Event）
-	•	领域事件：表示领域中的某个状态发生了改变，通常用来实现解耦和触发异步处理。例如，“订单已支付”或“库存已更新”等。”
+  - 设计接口规范
+  - 补充关系类型
+  - 完善通信模式 
