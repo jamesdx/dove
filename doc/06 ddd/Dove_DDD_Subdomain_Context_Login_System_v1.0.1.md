@@ -542,9 +542,181 @@ graph TB
    - 事件溯源
    - 最终一致性
 
-## 4. 实现建议
+## 4. 微服务映射
 
-### 4.1 技术选型建议
+### 4.1 认证服务（Authentication Service）
+- 对应上下文：认证上下文
+- 服务职责：
+  - 处理所有认证请求
+  - 执行认证策略
+  - 生成认证结果
+  - 管理认证配置
+- 接口定义：
+  ```
+  # RESTful API
+  POST /api/v1/auth/login          # 用户登录
+  POST /api/v1/auth/mfa            # 多因素认证
+  GET /api/v1/auth/status          # 认证状态查询
+  PUT /api/v1/auth/policy          # 更新认证策略
+
+  # 事件
+  AuthenticationSucceeded          # 认证成功事件
+  AuthenticationFailed             # 认证失败事件
+  PolicyUpdated                    # 策略更新事件
+  ```
+- 依赖服务：
+  - 用户服务（共享内核）
+  - 会话服务（合作关系）
+  - 集成服务（通过防腐层）
+
+### 4.2 会话服务（Session Service）
+- 对应上下文：会话上下文
+- 服务职责：
+  - 管理用户会话
+  - 处理访问令牌
+  - 同步登录状态
+  - 控制并发登录
+- 接口定义：
+  ```
+  # RESTful API
+  POST /api/v1/sessions           # 创建会话
+  GET /api/v1/sessions/{id}       # 获取会话信息
+  PUT /api/v1/sessions/{id}       # 更新会话
+  DELETE /api/v1/sessions/{id}    # 销毁会话
+  PUT /api/v1/sessions/{id}/refresh # 刷新会话
+
+  # 事件
+  SessionCreated                  # 会话创建事件
+  SessionExpired                  # 会话过期事件
+  SessionTerminated              # 会话终止事件
+  ```
+- 依赖服务：
+  - 认证服务（合作关系）
+  - 审计服务（事件发布）
+
+### 4.3 用户服务（User Service）
+- 对应上下文：用户上下文
+- 服务职责：
+  - 用户信息管理
+  - 账号生命周期
+  - 凭证管理
+  - 账号关联管理
+- 接口定义：
+  ```
+  # RESTful API
+  POST /api/v1/users              # 创建用户
+  GET /api/v1/users/{id}          # 获取用户信息
+  PUT /api/v1/users/{id}          # 更新用户信息
+  DELETE /api/v1/users/{id}       # 删除用户
+  PATCH /api/v1/users/{id}/status # 更新用户状态
+  PUT /api/v1/users/{id}/credentials # 更新凭证
+
+  # 共享模型
+  UserIdentity                    # 用户身份模型
+  UserCredential                  # 用户凭证模型
+  ```
+- 依赖服务：
+  - 认证服务（共享内核）
+  - 审计服务（事件发布）
+
+### 4.4 审计服务（Audit Service）
+- 对应上下文：审计上下文
+- 服务职责：
+  - 日志记录
+  - 风险评估
+  - 合规检查
+  - 报告生成
+- 接口定义：
+  ```
+  # RESTful API
+  POST /api/v1/audit/logs         # 记录审计日志
+  GET /api/v1/audit/logs          # 查询审计日志
+  POST /api/v1/audit/risks        # 风险评估
+  GET /api/v1/audit/reports       # 获取审计报告
+  GET /api/v1/audit/compliance    # 合规性检查
+
+  # 消息订阅
+  AuthenticationEvents            # 认证事件订阅
+  SessionEvents                   # 会话事件订阅
+  UserEvents                      # 用户事件订阅
+  ```
+- 依赖服务：无（纯消费者）
+
+### 4.5 集成服务（Integration Service）
+- 对应上下文：集成上下文
+- 服务职责：
+  - 外部认证集成
+  - 数据同步转换
+  - 配置管理
+  - 协议适配
+- 接口定义：
+  ```
+  # RESTful API
+  POST /api/v1/integration/sso    # SSO认证
+  POST /api/v1/integration/ldap   # LDAP认证
+  POST /api/v1/integration/oauth  # OAuth认证
+  PUT /api/v1/integration/config  # 更新配置
+
+  # 防腐层接口
+  ProtocolTranslator              # 协议转换器
+  DataMapper                      # 数据映射器
+  ```
+- 依赖服务：
+  - 认证服务（通过防腐层）
+  - 用户服务（数据同步）
+
+### 4.6 基础设施服务（Infrastructure Service）
+- 对应上下文：基础设施上下文
+- 服务职责：
+  - 配置管理
+  - 缓存服务
+  - 消息服务
+  - 监控告警
+- 接口定义：
+  ```
+  # 内部API
+  ConfigurationService            # 配置服务
+  CacheService                    # 缓存服务
+  MessageService                  # 消息服务
+  MonitoringService              # 监控服务
+
+  # 管理接口
+  POST /api/v1/infra/config      # 更新配置
+  GET /api/v1/infra/metrics      # 获取指标
+  GET /api/v1/infra/health       # 健康检查
+  POST /api/v1/infra/alerts      # 告警配置
+  ```
+- 依赖服务：无（基础服务提供者）
+
+### 4.7 服务通信关系图
+
+```mermaid
+graph TB
+    A[认证服务] 
+    B[会话服务]
+    C[用户服务]
+    D[审计服务]
+    E[集成服务]
+    F[基础设施服务]
+
+    A <--> |"REST + 事件"| B
+    A <--> |"共享模型"| C
+    B --> |"事件流"| D
+    E -.-> |"防腐层"| A
+    
+    F --> |"基础服务"| A
+    F --> |"基础服务"| B
+    F --> |"基础服务"| C
+    F --> |"基础服务"| D
+    F --> |"基础服务"| E
+
+    classDef service fill:#f9f,stroke:#333,stroke-width:2px
+    class A,B,C,D,E,F service
+```
+
+## 5. 实现建议
+
+### 5.1 技术选型建议
 1. 认证服务实现：
    - 语言：Java/Kotlin
    - 框架：Spring Boot
@@ -582,7 +754,7 @@ graph TB
    - 日志：ELK Stack
    - 链路追踪：Jaeger
 
-### 4.2 接口规范建议
+### 5.2 接口规范建议
 1. API设计原则：
    - RESTful风格
    - 版本控制
@@ -601,7 +773,7 @@ graph TB
    - TLS传输加密
    - 敏感数据加密
 
-### 4.3 部署架构建议
+### 5.3 部署架构建议
 1. 容器化部署：
    - 容器平台：Kubernetes
    - 镜像仓库：Harbor
