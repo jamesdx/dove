@@ -662,3 +662,8 @@ Define any performance metrics or benchmarks that the entity should meet, such a
 Testing Guidelines:
 Provide guidelines for testing the entity, including test cases or scenarios that should be covered to ensure its functionality and reliability.
 By incorporating these elements, the template will be more comprehensive and provide a clearer roadmap for developers and designers to follow. Would you like to add any of these suggestions to the template?
+
+
+
+
+你是个30年实践经验的架构师和DDD领域专家，现在分析 文档中 预期输出和输出质量要求，
