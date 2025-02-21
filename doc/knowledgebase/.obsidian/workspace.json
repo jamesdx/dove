@@ -1,0 +1,169 @@
+{
+  "main": {
+    "id": "8aae1aaa70220736",
+    "type": "split",
+    "children": [
+      {
+        "id": "7eb478e33f2429f4",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "3c22d2bc63a67143",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "5cb05e1644bf310e",
+    "type": "split",
+    "children": [
+      {
+        "id": "b33c7ff449cf9788",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "00be302c3df83b38",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "a5426cbd5992bf39",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "ec2a7de34c8e9559",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "ac0bbe103b722a59",
+    "type": "split",
+    "children": [
+      {
+        "id": "efe9800aedfceec1",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "ef76d7ea645c78f4",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "13b72f369ed70416",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "bde3be8e9a32c5ae",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "26f4082811ad0a15",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {},
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false
+    }
+  },
+  "active": "3c22d2bc63a67143",
+  "lastOpenFiles": [
+    "02 Architect/Scalability/Scalability.md",
+    "02 Architect/Untitled.canvas",
+    "02 Architect/Performance.md",
+    "02 Architect/Scalability/Elastic Scalability.md",
+    "02 Architect/Scalability/Capacity Planning.md",
+    "02 Architect/Scalability",
+    "02 Architect/Capacity Planning.md",
+    "02 Architect/Scalability.md",
+    "02 Architect/Elastic Scalability.md"
+  ]
+}
