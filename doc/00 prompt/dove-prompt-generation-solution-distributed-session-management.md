@@ -881,7 +881,179 @@ graph TD
 
 ### 3.3 技术架构
 
-#### 1. 应用架构
+#### 1. 整体技术架构描述
+分布式会话管理系统的技术架构设计遵循"高内聚、低耦合"的原则，采用分层架构和微服务架构相结合的方式。系统在保证高可用性和高性能的同时，通过合理的架构设计确保系统的可扩展性和可维护性。整体架构包括用户访问层、接入层、认证授权层、业务服务层、中间件层、数据存储层和运维监控层八个主要层次。 每个层次都有其明确的职责和边界：
+- 用户访问层负责用户请求的接入和路由
+- 接入层负责请求的接入和路由
+- 认证授权层负责认证和授权
+- 业务服务层处理核心业务逻辑
+- 中间件层提供公共基础能力
+- 数据存储层管理数据存储和访问
+- 运维监控层保障系统的稳定运行
+
+#### 2. 技术架构图及说明
+##### 2.1 总体技术架构图
+```mermaid
+graph TD
+    subgraph 用户访问层
+        Browser[浏览器]
+        MobileApp[移动应用]
+        ThirdParty[第三方系统]
+    end
+
+    subgraph 接入层
+        LB[负载均衡器]
+        Gateway[API网关]
+        WAF[Web应用防火墙]
+    end
+
+    subgraph 认证授权层
+        Auth[认证中心]
+        OAuth[OAuth2.0服务]
+        JWT[JWT服务]
+    end
+
+    subgraph 业务服务层
+        AS[认证服务]
+        SS[会话服务]
+        US[用户服务]
+        PS[权限服务]
+    end
+
+    subgraph 中间件层
+        Cache[缓存服务]
+        MQ[消息队列]
+        Registry[服务注册]
+        Config[配置中心]
+    end
+
+    subgraph 数据存储层
+        Redis[Redis集群]
+        MariaDB[MariaDB集群]
+        ES[Elasticsearch]
+    end
+
+    subgraph 基础设施层
+        K8S[Kubernetes]
+        Docker[容器服务]
+        Network[网络服务]
+        Storage[存储服务]
+    end
+
+    subgraph 运维监控层
+        Monitor[监控系统]
+        Log[日志系统]
+        Trace[链路追踪]
+        Alert[告警系统]
+    end
+
+    Browser --> LB
+    MobileApp --> LB
+    ThirdParty --> LB
+    LB --> WAF
+    WAF --> Gateway
+    Gateway --> Auth
+    Auth --> OAuth
+    Auth --> JWT
+    OAuth --> AS
+    JWT --> AS
+    AS --> SS
+    AS --> US
+    AS --> PS
+    SS --> Cache
+    SS --> MQ
+    US --> Cache
+    PS --> Cache
+    AS --> Registry
+    SS --> Registry
+    US --> Registry
+    PS --> Registry
+    Cache --> Redis
+    US --> MariaDB
+    PS --> MariaDB
+    SS --> ES
+    Redis --> K8S
+    MariaDB --> K8S
+    ES --> K8S
+    K8S --> Monitor
+    K8S --> Log
+    K8S --> Trace
+    Monitor --> Alert
+```
+
+##### 2.2 架构层次说明
+1. **用户访问层**
+   - 支持多种客户端接入
+   - 提供统一的访问入口
+   - 实现客户端适配
+
+2. **接入层**
+   - 负载均衡：实现流量分发
+   - API网关：请求路由和过滤
+   - 安全防护：WAF防护
+
+3. **认证授权层**
+   - 统一认证中心
+   - OAuth2.0协议支持
+   - JWT令牌管理
+
+4. **业务服务层**
+   - 认证服务：身份认证
+   - 会话服务：会话管理
+   - 用户服务：用户管理
+   - 权限服务：权限控制
+
+5. **中间件层**
+   - 缓存服务：分布式缓存
+   - 消息队列：异步通信
+   - 服务注册：服务发现
+   - 配置中心：配置管理
+
+6. **数据存储层**
+   - Redis集群：会话存储
+   - MariaDB集群：数据持久化
+   - Elasticsearch：日志检索
+
+7. **基础设施层**
+   - 容器编排：Kubernetes
+   - 容器运行：Docker
+   - 网络服务：SDN
+   - 存储服务：分布式存储
+
+8. **运维监控层**
+   - 监控系统：性能监控
+   - 日志系统：日志收集
+   - 链路追踪：调用链跟踪
+   - 告警系统：异常告警
+
+##### 2.3 关键流程说明
+1. **认证流程**
+   - 客户端请求认证
+   - 网关路由到认证服务
+   - 认证服务验证身份
+   - 生成JWT令牌
+   - 返回认证结果
+
+2. **会话管理流程**
+   - 创建分布式会话
+   - 会话状态同步
+   - 会话有效性验证
+   - 会话自动续期
+   - 会话安全清理
+
+3. **数据访问流程**
+   - 多级缓存访问
+   - 读写分离处理
+   - 数据分片路由
+   - 数据同步复制
+
+4. **监控告警流程**
+   - 指标数据采集
+   - 性能监控分析
+   - 异常情况检测
+   - 告警信息推送
+
+#### 3. 应用架构
 - **微服务架构**
   ```mermaid
   graph TD
