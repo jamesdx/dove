@@ -1,4 +1,667 @@
-# NEW
+# NEW-7
+## 1. 整体架构图
+
+```mermaid
+graph TD
+    %% 原有的层级定义保持不变
+    subgraph 用户访问层
+        Browser[浏览器]
+        MobileApp[移动应用]
+        ThirdParty[第三方系统]
+    end
+
+    subgraph 接入层
+        LB[负载均衡器]
+        WAF[Web应用防火墙]
+        Gateway[API Gateway]
+        Gateway --> TokenValidate[Token验证]
+        Gateway --> RouteFilter[路由过滤]
+    end
+
+    subgraph 业务服务层
+        subgraph 认证授权模块
+            TokenValidate --> AuthService[认证服务]
+            TokenValidate --> AuthorizationService[授权服务]
+            AuthService --> OAuth[OAuth2.0服务]
+            AuthService --> JWT[JWT服务]
+        end
+
+        subgraph 会话管理模块
+            AuthService --> SessionService[会话服务]
+            AuthorizationService --> SessionService
+        end
+
+        subgraph 业务服务模块
+            ProjectService[项目服务]
+            IssueService[问题服务]
+            WorkflowService[工作流服务]
+            BoardService[看板服务]
+            SearchService[搜索服务]
+            NotificationService[通知服务]
+            ReportService[报表服务]
+            UserService[用户服务]
+            TeamService[团队服务]
+            PermissionService[权限服务]
+        end
+    end
+
+    subgraph 治理架构层
+        Registry[服务注册中心]
+        Config[配置中心]
+        Circuit[熔断器]
+        LoadBalance[负载均衡器]
+        Router[服务路由]
+        Version[版本管理]
+        RateLimit[限流控制]
+    end
+
+    subgraph 中间件层
+        subgraph 消息中间件
+            MQ[消息队列]
+            EventBus[事件总线]
+        end
+
+        subgraph 数据存储中间件
+            Cache[Redis集群]
+            DB[MariaDB集群]
+            ES[Elasticsearch]
+        end
+    end
+
+    subgraph 基础设施层
+        K8S[Kubernetes]
+        Docker[容器服务]
+        Network[网络服务]
+        Storage[存储服务]
+    end
+
+    subgraph 运维监控层
+        Monitor[监控系统]
+        Log[日志系统]
+        Trace[链路追踪]
+        Alert[告警系统]
+    end
+
+    %% 业务服务与中间件的关系
+    AuthService --> MQ
+    AuthService --> EventBus
+    AuthService --> Cache
+    AuthService --> DB
+    
+    SessionService --> MQ
+    SessionService --> EventBus
+    SessionService --> Cache
+    SessionService --> DB
+    
+    ProjectService --> MQ
+    IssueService --> MQ
+    WorkflowService --> MQ
+    BoardService --> MQ
+    SearchService --> MQ
+    NotificationService --> MQ
+    ReportService --> MQ
+    UserService --> MQ
+    TeamService --> MQ
+    PermissionService --> MQ
+    
+    ProjectService --> Cache
+    IssueService --> Cache
+    WorkflowService --> Cache
+    BoardService --> Cache
+    SearchService --> Cache
+    NotificationService --> Cache
+    ReportService --> Cache
+    UserService --> Cache
+    TeamService --> Cache
+    PermissionService --> Cache
+    
+    ProjectService --> DB
+    IssueService --> DB
+    WorkflowService --> DB
+    BoardService --> DB
+    SearchService --> DB
+    NotificationService --> DB
+    ReportService --> DB
+    UserService --> DB
+    TeamService --> DB
+    PermissionService --> DB
+
+    %% 治理层与中间件的关系
+    Registry --> Cache
+    Config --> DB
+    Router --> Cache
+    LoadBalance --> Cache
+    Circuit --> Cache
+    RateLimit --> Cache
+    Version --> DB
+
+    %% 中间件层与基础设施层的关系
+    MQ --> K8S
+    EventBus --> K8S
+    Cache --> K8S
+    DB --> K8S
+    ES --> K8S
+
+    MQ --> Storage
+    EventBus --> Storage
+    Cache --> Storage
+    DB --> Storage
+    ES --> Storage
+
+    %% 监控相关的关系
+    MQ --> Monitor
+    EventBus --> Monitor
+    Cache --> Monitor
+    DB --> Monitor
+    ES --> Monitor
+
+    %% 日志相关的关系
+    MQ --> Log
+    EventBus --> Log
+    Cache --> Log
+    DB --> Log
+    ES --> Log
+
+    %% 链路追踪相关的关系
+    MQ --> Trace
+    EventBus --> Trace
+    Cache --> Trace
+    DB --> Trace
+    ES --> Trace
+
+    %% 原有的其他关系保持不变
+    Browser --> LB
+    MobileApp --> LB
+    ThirdParty --> LB
+    LB --> WAF
+    WAF --> Gateway
+
+    Gateway --> ProjectService
+    Gateway --> IssueService
+    Gateway --> WorkflowService
+    Gateway --> BoardService
+    Gateway --> SearchService
+    Gateway --> NotificationService
+    Gateway --> ReportService
+    Gateway --> UserService
+    Gateway --> TeamService
+    Gateway --> PermissionService
+
+    ProjectService --> IssueService
+    IssueService --> WorkflowService
+    WorkflowService --> BoardService
+
+    ProjectService -.-> SessionService
+    IssueService -.-> SessionService
+    WorkflowService -.-> SessionService
+    BoardService -.-> SessionService
+    SearchService -.-> SessionService
+    NotificationService -.-> SessionService
+    ReportService -.-> SessionService
+    UserService -.-> SessionService
+    TeamService -.-> SessionService
+    PermissionService -.-> SessionService
+    
+    ProjectService -.-> AuthorizationService
+    IssueService -.-> AuthorizationService
+    WorkflowService -.-> AuthorizationService
+    BoardService -.-> AuthorizationService
+    SearchService -.-> AuthorizationService
+    NotificationService -.-> AuthorizationService
+    ReportService -.-> AuthorizationService
+    UserService -.-> AuthorizationService
+    TeamService -.-> AuthorizationService
+    PermissionService -.-> AuthorizationService
+
+    K8S --> Monitor
+    K8S --> Log
+    K8S --> Trace
+    Monitor --> Alert
+
+    %% 接入层与治理架构层的关系
+    Gateway --> Registry
+    Gateway --> Config
+    Gateway --> Circuit
+    Gateway --> LoadBalance
+    Gateway --> Router
+    Gateway --> Version
+    Gateway --> RateLimit
+
+    LB --> Registry
+    LB --> LoadBalance
+    LB --> Circuit
+
+    %% 样式定义
+    classDef gateway fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef service fill:#bbf,stroke:#333,stroke-width:2px;
+    classDef storage fill:#dfd,stroke:#333,stroke-width:2px;
+    classDef auth fill:#ffd,stroke:#333,stroke-width:2px;
+    classDef session fill:#dff,stroke:#333,stroke-width:2px;
+    classDef infra fill:#ffe,stroke:#333,stroke-width:2px;
+    classDef middleware fill:#fdf,stroke:#333,stroke-width:2px;
+    classDef governance fill:#eff,stroke:#333,stroke-width:2px;
+    
+    class Gateway,TokenValidate,RouteFilter gateway;
+    class AuthService,AuthorizationService,OAuth,JWT auth;
+    class SessionService session;
+    class ProjectService,IssueService,WorkflowService,BoardService,SearchService,NotificationService,ReportService,UserService,TeamService,PermissionService service;
+    class Cache,DB,ES,MQ,EventBus middleware;
+    class K8S,Docker,Network,Storage infra;
+    class Registry,Config,Circuit,LoadBalance,Router,Version,RateLimit governance;
+```
+
+主要改进：
+1. 添加了业务服务与中间件层的完整依赖关系
+2. 添加了治理层组件与中间件的交互关系
+3. 添加了中间件层与基础设施层的依赖关系
+4. 添加了中间件层与监控层的关联关系
+5. 保持了原有的其他层级关系不变
+
+这样的架构图更完整地展示了：
+1. 各个业务服务对中间件的使用
+2. 治理层对中间件的依赖
+3. 中间件的部署和运维关系
+4. 完整的监控和追踪体系
+
+需要我详细解释某个部分吗？
+# NEW -6
+## 1. 整体架构图
+
+```mermaid
+graph TD
+    subgraph 用户访问层
+        Browser[浏览器]
+        MobileApp[移动应用]
+        ThirdParty[第三方系统]
+    end
+
+    subgraph 接入层
+        LB[负载均衡器]
+        WAF[Web应用防火墙]
+        Gateway[API Gateway]
+        Gateway --> TokenValidate[Token验证]
+        Gateway --> RouteFilter[路由过滤]
+    end
+
+    subgraph 业务服务层
+        subgraph 认证授权模块
+            TokenValidate --> AuthService[认证服务]
+            TokenValidate --> AuthorizationService[授权服务]
+            AuthService --> OAuth[OAuth2.0服务]
+            AuthService --> JWT[JWT服务]
+        end
+
+        subgraph 会话管理模块
+            AuthService --> SessionService[会话服务]
+            AuthorizationService --> SessionService
+        end
+
+        subgraph 业务服务模块
+            OrderService[订单服务]
+            ProductService[商品服务]
+            PaymentService[支付服务]
+            UserService[用户服务]
+        end
+    end
+
+    subgraph 治理架构层
+        Registry[服务注册中心]
+        Config[配置中心]
+        Circuit[熔断器]
+        LoadBalance[负载均衡器]
+        Router[服务路由]
+        Version[版本管理]
+        RateLimit[限流控制]
+    end
+
+    subgraph 中间件层
+        subgraph 消息中间件
+            MQ[消息队列]
+            EventBus[事件总线]
+        end
+
+        subgraph 数据存储中间件
+            Cache[Redis集群]
+            DB[MariaDB集群]
+            ES[Elasticsearch]
+        end
+    end
+
+    subgraph 基础设施层
+        K8S[Kubernetes]
+        Docker[容器服务]
+        Network[网络服务]
+        Storage[存储服务]
+    end
+
+    subgraph 运维监控层
+        Monitor[监控系统]
+        Log[日志系统]
+        Trace[链路追踪]
+        Alert[告警系统]
+    end
+
+    %% 用户访问流向
+    Browser --> LB
+    MobileApp --> LB
+    ThirdParty --> LB
+    LB --> WAF
+    WAF --> Gateway
+
+    %% 网关到业务服务的调用
+    Gateway --> OrderService
+    Gateway --> ProductService
+    Gateway --> PaymentService
+    Gateway --> UserService
+
+    %% 服务注册和配置
+    OrderService --> Registry
+    ProductService --> Registry
+    PaymentService --> Registry
+    UserService --> Registry
+    SessionService --> Registry
+    AuthService --> Registry
+
+    %% 服务间直接调用
+    OrderService --> ProductService
+    OrderService --> PaymentService
+    
+    %% 业务服务获取会话和权限
+    OrderService -.-> SessionService
+    ProductService -.-> SessionService
+    PaymentService -.-> SessionService
+    UserService -.-> SessionService
+    OrderService -.-> AuthorizationService
+    ProductService -.-> AuthorizationService
+    PaymentService -.-> AuthorizationService
+    UserService -.-> AuthorizationService
+
+    %% 基础设施依赖
+    Cache --> K8S
+    DB --> K8S
+    ES --> K8S
+    K8S --> Monitor
+    K8S --> Log
+    K8S --> Trace
+    Monitor --> Alert
+
+    %% 样式定义
+    classDef gateway fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef service fill:#bbf,stroke:#333,stroke-width:2px;
+    classDef storage fill:#dfd,stroke:#333,stroke-width:2px;
+    classDef auth fill:#ffd,stroke:#333,stroke-width:2px;
+    classDef session fill:#dff,stroke:#333,stroke-width:2px;
+    classDef infra fill:#ffe,stroke:#333,stroke-width:2px;
+    classDef middleware fill:#fdf,stroke:#333,stroke-width:2px;
+    classDef governance fill:#eff,stroke:#333,stroke-width:2px;
+    
+    class Gateway,TokenValidate,RouteFilter gateway;
+    class AuthService,AuthorizationService,OAuth,JWT auth;
+    class SessionService session;
+    class OrderService,ProductService,PaymentService,UserService service;
+    class Cache,DB,ES,MQ,EventBus middleware;
+    class K8S,Docker,Network,Storage infra;
+    class Registry,Config,Circuit,LoadBalance,Router,Version,RateLimit governance;
+```
+
+架构层次说明：
+1. **用户访问层**：处理各类客户端接入
+
+2. **接入层**：
+   - 负载均衡：流量分发
+   - WAF：安全防护
+   - API网关：统一接入、认证、路由
+
+3. **业务服务层**：
+   A. 认证授权模块：
+      - 认证服务：用户认证
+      - 授权服务：权限验证
+      - OAuth2.0服务：第三方认证
+      - JWT服务：令牌管理
+
+   B. 会话管理模块：
+      - 会话服务：核心会话管理
+      - 会话状态维护
+      - 会话生命周期管理
+
+   C. 业务服务模块：
+      - 订单服务
+      - 商品服务
+      - 支付服务
+      - 用户服务
+
+4. **治理架构层**：
+   - 服务注册中心：服务注册与发现
+   - 配置中心：配置管理与动态刷新
+   - 熔断器：服务熔断与降级
+   - 负载均衡器：服务负载均衡
+   - 服务路由：动态路由策略
+   - 版本管理：服务版本控制
+   - 限流控制：服务访问控制
+
+5. **中间件层**：
+   A. 消息中间件：
+      - 消息队列：异步消息处理
+      - 事件总线：事件驱动架构
+
+   B. 数据存储中间件：
+      - Redis集群：分布式缓存
+      - MariaDB集群：数据持久化
+      - Elasticsearch：日志检索
+
+6. **基础设施层**：
+   - Kubernetes：容器编排
+   - Docker：容器运行
+   - 网络服务：SDN
+   - 存储服务：分布式存储
+
+7. **运维监控层**：
+   - 监控系统：性能监控
+   - 日志系统：日志收集
+   - 链路追踪：调用链跟踪
+   - 告警系统：异常告警
+
+
+
+
+# NEW - 5
+## 1. 整体架构图
+
+```mermaid
+graph TD
+    subgraph 用户访问层
+        Browser[浏览器]
+        MobileApp[移动应用]
+        ThirdParty[第三方系统]
+    end
+
+    subgraph 接入层
+        LB[负载均衡器]
+        WAF[Web应用防火墙]
+        Gateway[API Gateway]
+        Gateway --> TokenValidate[Token验证]
+        Gateway --> RouteFilter[路由过滤]
+    end
+
+    subgraph 业务服务层
+        subgraph 认证授权模块
+            TokenValidate --> AuthService[认证服务]
+            TokenValidate --> AuthorizationService[授权服务]
+            AuthService --> OAuth[OAuth2.0服务]
+            AuthService --> JWT[JWT服务]
+        end
+
+        subgraph 会话管理模块
+            AuthService --> SessionService[会话服务]
+            AuthorizationService --> SessionService
+        end
+
+        subgraph 业务服务模块
+            OrderService[订单服务]
+            ProductService[商品服务]
+            PaymentService[支付服务]
+            UserService[用户服务]
+        end
+    end
+
+    subgraph 治理架构层
+        Registry[服务注册中心]
+        Config[配置中心]
+        Circuit[熔断器]
+        LoadBalance[负载均衡器]
+        Router[服务路由]
+        Version[版本管理]
+        RateLimit[限流控制]
+    end
+
+    subgraph 中间件层
+        subgraph 消息中间件
+            MQ[消息队列]
+            EventBus[事件总线]
+        end
+
+        subgraph 数据存储中间件
+            Cache[Redis集群]
+            DB[MariaDB集群]
+            ES[Elasticsearch]
+        end
+    end
+
+    subgraph 基础设施层
+        K8S[Kubernetes]
+        Docker[容器服务]
+        Network[网络服务]
+        Storage[存储服务]
+    end
+
+    subgraph 运维监控层
+        Monitor[监控系统]
+        Log[日志系统]
+        Trace[链路追踪]
+        Alert[告警系统]
+    end
+
+    %% 用户访问流向
+    Browser --> LB
+    MobileApp --> LB
+    ThirdParty --> LB
+    LB --> WAF
+    WAF --> Gateway
+
+    %% 网关到业务服务的调用
+    Gateway --> OrderService
+    Gateway --> ProductService
+    Gateway --> PaymentService
+    Gateway --> UserService
+
+    %% 服务注册和配置
+    OrderService --> Registry
+    ProductService --> Registry
+    PaymentService --> Registry
+    UserService --> Registry
+    SessionService --> Registry
+    AuthService --> Registry
+
+    %% 服务间直接调用
+    OrderService --> ProductService
+    OrderService --> PaymentService
+    
+    %% 业务服务获取会话和权限
+    OrderService -.-> SessionService
+    ProductService -.-> SessionService
+    PaymentService -.-> SessionService
+    UserService -.-> SessionService
+    OrderService -.-> AuthorizationService
+    ProductService -.-> AuthorizationService
+    PaymentService -.-> AuthorizationService
+    UserService -.-> AuthorizationService
+
+    %% 基础设施依赖
+    Cache --> K8S
+    DB --> K8S
+    ES --> K8S
+    K8S --> Monitor
+    K8S --> Log
+    K8S --> Trace
+    Monitor --> Alert
+
+    %% 样式定义
+    classDef gateway fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef service fill:#bbf,stroke:#333,stroke-width:2px;
+    classDef storage fill:#dfd,stroke:#333,stroke-width:2px;
+    classDef auth fill:#ffd,stroke:#333,stroke-width:2px;
+    classDef session fill:#dff,stroke:#333,stroke-width:2px;
+    classDef infra fill:#ffe,stroke:#333,stroke-width:2px;
+    classDef middleware fill:#fdf,stroke:#333,stroke-width:2px;
+    classDef governance fill:#eff,stroke:#333,stroke-width:2px;
+    
+    class Gateway,TokenValidate,RouteFilter gateway;
+    class AuthService,AuthorizationService,OAuth,JWT auth;
+    class SessionService session;
+    class OrderService,ProductService,PaymentService,UserService service;
+    class Cache,DB,ES,MQ,EventBus middleware;
+    class K8S,Docker,Network,Storage infra;
+    class Registry,Config,Circuit,LoadBalance,Router,Version,RateLimit governance;
+```
+
+架构层次说明：
+1. **用户访问层**：处理各类客户端接入
+
+2. **接入层**：
+   - 负载均衡：流量分发
+   - WAF：安全防护
+   - API网关：统一接入、认证、路由
+
+3. **业务服务层**：
+   A. 认证授权模块：
+      - 认证服务：用户认证
+      - 授权服务：权限验证
+      - OAuth2.0服务：第三方认证
+      - JWT服务：令牌管理
+
+   B. 会话管理模块：
+      - 会话服务：核心会话管理
+      - 会话状态维护
+      - 会话生命周期管理
+
+   C. 业务服务模块：
+      - 订单服务
+      - 商品服务
+      - 支付服务
+      - 用户服务
+
+4. **治理架构层**：
+   - 服务注册中心：服务注册与发现
+   - 配置中心：配置管理与动态刷新
+   - 熔断器：服务熔断与降级
+   - 负载均衡器：服务负载均衡
+   - 服务路由：动态路由策略
+   - 版本管理：服务版本控制
+   - 限流控制：服务访问控制
+
+5. **中间件层**：
+   A. 消息中间件：
+      - 消息队列：异步消息处理
+      - 事件总线：事件驱动架构
+
+   B. 数据存储中间件：
+      - Redis集群：分布式缓存
+      - MariaDB集群：数据持久化
+      - Elasticsearch：日志检索
+
+6. **基础设施层**：
+   - Kubernetes：容器编排
+   - Docker：容器运行
+   - 网络服务：SDN
+   - 存储服务：分布式存储
+
+7. **运维监控层**：
+   - 监控系统：性能监控
+   - 日志系统：日志收集
+   - 链路追踪：调用链跟踪
+   - 告警系统：异常告警
+
+
 
 ## 1. 整体架构图
 
@@ -998,7 +1661,6 @@ sequenceDiagram
      * 非关键属性更新
      * 统计数据更新
      * 批量数据处理
-
 4. **异常处理**
    - 网络异常
      * 重试机制
@@ -2338,3 +3000,4 @@ public class OptimizedContextManager {
 3. 直接复用用户会话上下文
 4. 保持调用链路追踪能力
 5. 支持本地缓存优化
+
