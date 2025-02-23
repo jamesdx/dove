@@ -244,42 +244,504 @@ sequenceDiagram
 
 
 #### 5.3.1.2 核心功能描述
-   - 接收认证请求
-   - 验证用户凭证
-   - 执行多因素认证（如果启用）
-   - 生成访问令牌
-   - 创建用户会话
-   - 返回认证结果
+好的，我将根据5.3.1.1的流程图来更新5.3.1.2的核心功能描述。
+
+English & Chinese:
+
+#### 5.3.1.2 核心功能描述 (Core Function Description)
+
+1. **认证入口功能 (Authentication Entry Functions)**
+   - 接收多种类型的认证请求（用户名密码/SSO/OAuth2）
+   - 识别认证类型并路由到对应处理流程
+   - 验证请求格式和必要参数
+   - 处理认证请求的预检验
+
+2. **基础认证功能 (Basic Authentication Functions)**
+   - 请求预处理和参数验证
+   - 频率限制检查和防暴力破解
+   - 用户信息验证和密码校验
+   - 账号状态检查（是否锁定/禁用）
+   - MFA需求判断和处理
+
+3. **MFA认证功能 (MFA Authentication Functions)**
+   - MFA配置获取和验证
+   - 支持多种MFA方式（TOTP/SMS/Email）
+   - MFA代码验证和有效期检查
+   - 备份码验证和恢复机制
+   - MFA错误处理和重试机制
+
+4. **SSO认证功能 (SSO Authentication Functions)**
+   - SSO服务重定向处理
+   - SSO回调接收和处理
+   - 票据验证和解析
+   - 用户信息同步和更新
+   - SSO会话管理
+
+5. **OAuth2认证功能 (OAuth2 Authentication Functions)**
+   - OAuth2服务重定向处理
+   - OAuth2回调接收和处理
+   - 访问令牌交换和验证
+   - 用户信息获取和处理
+   - 用户创建/更新机制
+
+6. **Token生成功能 (Token Generation Functions)**
+   - JWT Token生成和签名
+   - Token有效期设置
+   - Token格式和内容定义
+   - Token存储和缓存
+   - Token刷新机制
+
+7. **会话管理功能 (Session Management Functions)**
+   - 会话创建和初始化
+   - 会话数据存储和同步
+   - 会话有效期管理
+   - 会话状态维护
+   - 自动续期机制
+
+8. **状态更新功能 (Status Update Functions)**
+   - 用户登录状态更新
+   - 认证计数器重置
+   - 最后登录时间更新
+   - 设备信息记录
+   - 登录历史维护
+
+9. **审计日志功能 (Audit Logging Functions)**
+   - 认证过程日志记录
+   - 安全事件记录
+   - 操作审计跟踪
+   - 异常行为记录
+   - 合规性日志维护
+
+10. **异常处理功能 (Exception Handling Functions)**
+    - 认证失败处理
+    - 失败计数管理
+    - 账号锁定触发
+    - 错误响应生成
+    - 安全告警触发
+
+11. **安全控制功能 (Security Control Functions)**
+    - 请求来源验证
+    - 防重放攻击
+    - XSS防护
+    - CSRF防护
+    - 数据加密传输
+
+12. **监控告警功能 (Monitoring and Alert Functions)**
+    - 认证性能监控
+    - 失败率监控
+    - 异常行为检测
+    - 系统负载监控
+    - 告警规则触发
 
 #### 5.3.1.3 接口定义 (Interface Definition)
-- 请求接口：
-    - 路径: /auth/login
-    - 方法: POST
-    - Content-Type: application/json
-    - 请求体:
-        ``` json
-        {
-            "username": string,     // 用户名
-            "password": string,     // 密码（前端需要进行Base64编码）
-            "mfaCode": string,      // 可选，MFA验证码
-            "deviceInfo": {         // 设备信息
-            "deviceId": string,   // 设备标识
-            "deviceType": string, // 设备类型：WEB/IOS/ANDROID
-            "userAgent": string   // 用户代理
-            }
+好的，我将根据5.3.1.1的流程图和5.3.1.2的核心功能描述来更新5.3.1.3的API定义。
+
+English & Chinese:
+
+#### 5.3.1.3 接口定义 (Interface Definition)
+#### 5.3.1.3.1 基础认证对外接口
+1. **基础认证接口 (Basic Authentication Interface)**
+```markdown
+POST /auth/login
+Content-Type: application/json
+
+Request:
+{
+    "authType": "PASSWORD",           // 认证类型：PASSWORD/SSO/OAUTH2
+    "username": string,               // 用户名
+    "password": string,               // 密码（前端需要进行Base64编码）
+    "mfaCode": string,               // 可选，MFA验证码
+    "deviceInfo": {                   // 设备信息
+        "deviceId": string,           // 设备标识
+        "deviceType": string,         // 设备类型：WEB/IOS/ANDROID
+        "userAgent": string,          // 用户代理
+        "ipAddress": string           // IP地址
+    }
+}
+
+Response:
+{
+    "code": number,                   // 状态码：200成功，其他失败
+    "message": string,                // 响应消息
+    "data": {
+        "token": string,              // JWT访问令牌
+        "expiresIn": number,          // 过期时间（秒）
+        "refreshToken": string,       // 刷新令牌
+        "mfaRequired": boolean,       // 是否需要MFA验证
+        "mfaType": string            // MFA类型：TOTP/SMS/EMAIL
+    }
+}
+```
+
+2. **SSO认证接口 (SSO Authentication Interface)**
+```markdown
+GET /auth/sso/{provider}
+Content-Type: application/json
+
+Request Parameters:
+- provider: string                    // SSO提供者标识
+- redirect_uri: string               // 回调地址
+- state: string                      // 状态参数，防CSRF
+
+Response:
+- 重定向到SSO服务提供商登录页面
+
+Callback: GET /auth/sso/callback/{provider}
+Request Parameters:
+- code: string                       // SSO授权码
+- state: string                      // 状态校验码
+
+Response:
+{
+    "code": number,
+    "message": string,
+    "data": {
+        "token": string,
+        "expiresIn": number,
+        "userInfo": {
+            "userId": string,
+            "username": string,
+            "email": string
         }
-        ```
-    - 响应体:
-        ``` json
-        {
-            "code": number,        // 状态码：200成功，其他失败
-            "message": string,     // 响应消息
-            "data": {
-            "token": string,     // JWT访问令牌
-            "expiresIn": number  // 过期时间（秒）
-            }
+    }
+}
+```
+
+3. **OAuth2认证接口 (OAuth2 Authentication Interface)**
+```markdown
+GET /auth/oauth2/{provider}
+Content-Type: application/json
+
+Request Parameters:
+- provider: string                    // OAuth2提供者（如：google/github）
+- redirect_uri: string               // 回调地址
+- scope: string                      // 请求的权限范围
+- state: string                      // 状态参数，防CSRF
+
+Response:
+- 重定向到OAuth2服务提供商授权页面
+
+Callback: GET /auth/oauth2/callback/{provider}
+Request Parameters:
+- code: string                       // OAuth2授权码
+- state: string                      // 状态校验码
+
+Response:
+{
+    "code": number,
+    "message": string,
+    "data": {
+        "token": string,
+        "expiresIn": number,
+        "userInfo": {
+            "userId": string,
+            "username": string,
+            "email": string,
+            "avatarUrl": string
         }
-        ```
+    }
+}
+```
+
+4. **MFA验证接口 (MFA Verification Interface)**
+```markdown
+POST /auth/mfa/verify
+Content-Type: application/json
+
+Request:
+{
+    "mfaType": string,               // MFA类型：TOTP/SMS/EMAIL
+    "mfaCode": string,               // MFA验证码
+    "sessionToken": string           // 临时会话令牌
+}
+
+Response:
+{
+    "code": number,
+    "message": string,
+    "data": {
+        "token": string,              // JWT访问令牌
+        "expiresIn": number,          // 过期时间
+        "refreshToken": string        // 刷新令牌
+    }
+}
+```
+
+5. **令牌刷新接口 (Token Refresh Interface)**
+```markdown
+POST /auth/token/refresh
+Content-Type: application/json
+
+Request:
+{
+    "refreshToken": string,          // 刷新令牌
+    "deviceInfo": {                  // 设备信息（可选）
+        "deviceId": string,
+        "deviceType": string,
+        "userAgent": string
+    }
+}
+
+Response:
+{
+    "code": number,
+    "message": string,
+    "data": {
+        "token": string,             // 新的访问令牌
+        "expiresIn": number,         // 过期时间
+        "refreshToken": string       // 新的刷新令牌
+    }
+}
+```
+
+6. **登出接口 (Logout Interface)**
+```markdown
+POST /auth/logout
+Content-Type: application/json
+Authorization: Bearer {token}
+
+Request:
+{
+    "deviceId": string,              // 可选，特定设备登出
+    "allDevices": boolean           // 是否登出所有设备
+}
+
+Response:
+{
+    "code": number,
+    "message": string,
+    "data": {
+        "logoutTime": timestamp,
+        "deviceCount": number        // 登出的设备数量
+    }
+}
+```
+
+所有接口的通用错误响应：
+```markdown
+{
+    "code": number,                  // 错误码
+    "message": string,               // 错误信息
+    "errors": [{                     // 详细错误信息
+        "field": string,             // 错误字段
+        "message": string,           // 错误描述
+        "code": string               // 错误代码
+    }],
+    "traceId": string               // 请求跟踪ID
+}
+```
+#### 5.3.1.3.2 基础认证对内接口
+**内部服务接口 (Internal Service Interfaces)**
+
+1. **用户认证服务接口 (User Authentication Service Interface)**
+```markdown
+POST /internal/auth/validate
+Content-Type: application/json
+Authorization: Bearer {internal-service-token}
+
+Request:
+{
+    "username": string,               // 用户名
+    "password": string,               // 密码（加密后）
+    "tenantId": string,              // 租户ID
+    "deviceInfo": {                   // 设备信息
+        "deviceId": string,
+        "deviceType": string,
+        "userAgent": string
+    }
+}
+
+Response:
+{
+    "code": number,
+    "message": string,
+    "data": {
+        "userId": string,             // 用户ID
+        "username": string,           // 用户名
+        "status": string,             // 用户状态
+        "tenantId": string,          // 租户ID
+        "roles": string[],           // 角色列表
+        "permissions": string[],     // 权限列表
+        "mfaEnabled": boolean,       // 是否启用MFA
+        "mfaType": string           // MFA类型
+    }
+}
+```
+
+2. **会话管理服务接口 (Session Management Service Interface)** 
+```markdown
+# 创建会话
+POST /internal/session/create
+Content-Type: application/json
+Authorization: Bearer {internal-service-token}
+
+Request:
+{
+    "userId": string,                // 用户ID
+    "tenantId": string,             // 租户ID
+    "deviceInfo": {                  // 设备信息
+        "deviceId": string,
+        "deviceType": string,
+        "userAgent": string
+    },
+    "authInfo": {                    // 认证信息
+        "authType": string,          // 认证类型
+        "authTime": timestamp,       // 认证时间
+        "authProvider": string       // 认证提供者
+    }
+}
+
+Response:
+{
+    "code": number,
+    "message": string,
+    "data": {
+        "sessionId": string,         // 会话ID
+        "expiresIn": number,        // 过期时间（秒）
+        "createdAt": timestamp      // 创建时间
+    }
+}
+
+# 获取会话信息
+GET /internal/session/{sessionId}
+Authorization: Bearer {internal-service-token}
+
+Response:
+{
+    "code": number,
+    "message": string,
+    "data": {
+        "sessionId": string,         // 会话ID
+        "userId": string,           // 用户ID
+        "tenantId": string,         // 租户ID
+        "deviceInfo": object,       // 设备信息
+        "authInfo": object,         // 认证信息
+        "status": string,           // 会话状态
+        "createdAt": timestamp,     // 创建时间
+        "lastAccessTime": timestamp, // 最后访问时间
+        "expiresAt": timestamp      // 过期时间
+    }
+}
+```
+
+3. **用户状态管理接口 (User Status Management Interface)**
+```markdown
+# 更新用户认证状态
+PUT /internal/user/auth-status
+Content-Type: application/json
+Authorization: Bearer {internal-service-token}
+
+Request:
+{
+    "userId": string,                // 用户ID
+    "tenantId": string,             // 租户ID
+    "status": string,               // 新状态
+    "lastLoginTime": timestamp,     // 最后登录时间
+    "deviceInfo": {                 // 设备信息
+        "deviceId": string,
+        "deviceType": string,
+        "userAgent": string
+    },
+    "loginInfo": {                  // 登录信息
+        "loginIp": string,          // 登录IP
+        "loginLocation": string,    // 登录地点
+        "loginType": string         // 登录类型
+    }
+}
+
+Response:
+{
+    "code": number,
+    "message": string,
+    "data": {
+        "userId": string,           // 用户ID
+        "status": string,           // 更新后的状态
+        "updateTime": timestamp     // 更新时间
+    }
+}
+
+# 获取用户认证状态
+GET /internal/user/{userId}/auth-status
+Authorization: Bearer {internal-service-token}
+
+Response:
+{
+    "code": number,
+    "message": string,
+    "data": {
+        "userId": string,           // 用户ID
+        "status": string,           // 当前状态
+        "lastLoginTime": timestamp, // 最后登录时间
+        "failedAttempts": number,   // 失败尝试次数
+        "lockExpiresAt": timestamp, // 锁定过期时间
+        "activeDevices": [          // 当前活跃设备列表
+            {
+                "deviceId": string,
+                "deviceType": string,
+                "lastActiveTime": timestamp
+            }
+        ]
+    }
+}
+```
+
+4. **认证事件通知接口 (Authentication Event Notification Interface)**
+```markdown
+POST /internal/auth/events
+Content-Type: application/json
+Authorization: Bearer {internal-service-token}
+
+Request:
+{
+    "eventType": string,            // 事件类型
+    "userId": string,               // 用户ID
+    "tenantId": string,            // 租户ID
+    "eventTime": timestamp,        // 事件时间
+    "eventData": {                 // 事件数据
+        "authType": string,        // 认证类型
+        "deviceInfo": object,      // 设备信息
+        "location": string,        // 位置信息
+        "result": string,          // 认证结果
+        "failureReason": string    // 失败原因（如果有）
+    }
+}
+
+Response:
+{
+    "code": number,
+    "message": string,
+    "data": {
+        "eventId": string,         // 事件ID
+        "processStatus": string    // 处理状态
+    }
+}
+```
+
+所有内部接口的错误响应：
+```markdown
+{
+    "code": number,                // 错误码
+    "message": string,            // 错误信息
+    "errors": [{
+        "code": string,           // 错误代码
+        "message": string,        // 错误描述
+        "field": string          // 错误字段
+    }],
+    "traceId": string           // 请求跟踪ID
+}
+```
+
+内部接口错误码定义：
+- 200: 成功
+- 400: 请求参数错误
+- 401: 服务认证失败
+- 403: 服务无权限
+- 404: 资源不存在
+- 409: 资源冲突
+- 500: 服务器内部错误
+- 503: 服务暂时不可用
+
+
 #### 5.3.1.4 处理流程设计 (Process Design)
 
 ``` java
