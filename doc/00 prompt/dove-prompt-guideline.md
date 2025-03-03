@@ -177,7 +177,7 @@ def handle_generation_error(self, error, context):
 密切关注前沿大模型动向，尝试对话式代理（Chat Agent）、Retrieval-Augmented Generation（RAG）、插件生态等新兴技术；在实际应用中兼顾安全合规、数据脱敏、审计可追溯等要求，通过策略或 Prompt 改写降低误用或 Hallucination 风险，为企业带来可信且高价值的生成式 AI 解决方案。
 
 
-
+Prompt Pattern（如角色设定、步骤分解、示例对比、链式思维、ReAct 等），可灵活选用System / User / Assistant 提示、Zero-shot / Few-shot示例等技术
 
 
 
